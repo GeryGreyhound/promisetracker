@@ -1,0 +1,30 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+<div class="card mb-4">
+	<h2 class="card-header">tevékenységnapló</h2>
+	<div class="card-body">
+
+
+		<table class="table table-sm table-striped">
+			<thead>
+				<tr>
+				<th>dátum</th>
+				<th>ki</th>
+				<th>miben</th>
+				<th>mit</th>
+				<th>miről</th>
+				<th>mire</th>
+				</tr>
+    
+		{% for a in activities %}
+		<tr><td><small>{{ (a[0]|string)[:19] }}</small></td><td><small>{{ a[1] }}</small></td><td><small>{{ a[2] }}</small></td><td><small>{{ a[3] }}</small></td><td><small>{{ a[4][:45] }}</small></td><td><small>{{ a[5][:45]}}</small></td></tr>
+		{% endfor %}
+
+		</table>
+
+
+
+</div></div>
+
+{% endblock %}

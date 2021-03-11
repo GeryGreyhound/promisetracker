@@ -1,0 +1,26 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+<div class="card mb-4">
+	<h2 class="card-header">Cikk feldolgozása</h2>
+	<div class="card-body">
+
+		<center><img src=/static/images/loading.gif></center>
+
+		<table class="table table-sm table-striped">
+    
+		{% for key, value in status_message['details'].items() %}
+		<tr><td><b>{{ key }}</b></td><td>{{ value }}</td></tr>
+		{% endfor %}
+
+		</table>
+
+		<script type="text/javascript">
+    window.location = "/process_submission?submission_id={{ status_message['details']['submission_id'] }}&politician_id={{ status_message['details']['politician_id']}}";
+</script>
+
+
+
+</div></div>
+
+{% endblock %}

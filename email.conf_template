@@ -1,0 +1,1 @@
+{"smtp_server" : "smtp.gmail.com", "smtp_port" : 465, "username" : "[your_username]@gmail.com", "password" : "[your_password]", "sent_from" : "[address_sent_from]"}

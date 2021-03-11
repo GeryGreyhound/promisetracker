@@ -1,0 +1,261 @@
+{% extends "igeretfigyelo_layout.html" %}
+
+{% block content %}
+
+  <div class="card">
+  <h1 class="card-header">
+    Ígéretfigyelő admin{% if not "logged_in" in session %}</h1><p style="margin-left: 25px; margin-top: 50px;">Az oldal megtekintéséhez be jell jelentkezned</p>{% else %}<small><br>beküldött cikkek kezelése</small>{% endif %}
+</h1>
+
+   <div class="card-body">
+  {% if session["logged_in"] == True %}
+
+
+{% if "edit_feedback" in page_properties %}
+
+{% for key, value in page_properties["edit_feedback"].items() %}
+
+{% if key == 'saved' %}
+{% set alert_class = 'info' %}
+{% set alert_name = 'mentve:' %}
+{% elif key == 'deleted' %}
+{% set alert_class = 'danger' %}
+{% set alert_name = 'törölve:' %}
+{% elif key == 'error' %}
+{% set alert_class = 'warning' %}
+{% set alert_name = 'nem véglegesíthető:' %}
+{% endif %}
+
+{% if value|length > 0 and value[0] != '' %}
+
+<div class="alert alert-{{ alert_class }}" role="alert">
+  <b>{{ alert_name }} {{ value|length }}</b> -{% for v in value %} {{ v }}{% endfor %}
+</div>
+
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+
+
+
+
+  <form id="submissions" action="/manage_submissions" method = post>
+
+    <div class="form-row">
+    <div class="col-sm-4">
+    
+       <input class="btn btn-primary" type = "submit" value = "módosítások mentése" style="margin-top: 10px; margin-bottom: 10px;"> 
+     </div>
+<div class="col">
+        <input type="checkbox" class="form-check-input" name="finalize-check" id="finalize-check" style="margin-top: 22px;">
+    <label class="form-check-label" style="margin-top: 15px;" for="finalize-check">véglegesítés</label>
+  </div>
+</div>
+
+
+    {% if debug_mode %}
+
+Debug info: {{ page_properties }}
+
+{% endif %}
+
+
+
+  {% for sub in submissions_list %}
+
+  {% set sub_counter = loop.index %}
+
+
+
+{% if sub['confirm_value'] == 'save' %}
+{% set card_class = 'card text-white bg-success' %}
+{% set card_sub_title = 'Mentésre jelölte: ' + sub['confirmed_by_display_name']|string %}
+{% elif sub['confirm_value'] == 'discard' %}
+{% set card_class = 'card text-white bg-danger' %}
+{% set card_sub_title = 'Törlésre jelölte: ' + sub['confirmed_by_display_name']|string %}
+{% else %}
+{% set card_class = 'card' %}
+{% endif %}
+
+<div class="{{ card_class }}" style="margin-top: 25px;">
+<div class="card-header">
+  <h6>
+#{{ sub['submission_id'] }} | Beküldte: {{ sub['submitted_by'] }} | {{ sub['submission_date'] }} | {{ sub['politician_name'] }}
+{% if card_sub_title %}
+<hr>
+{{ card_sub_title }}
+{% endif %}
+</h6>
+</div>
+
+
+
+{% if 'validation_errors' in sub %}
+      {% if 'confirm_value' in sub and sub['confirm_value'] != 'none' %}
+            {% if not 'discard' in sub['confirm_value'] %}
+                <div class="alert alert-danger" role="alert">
+                <p style="margin-left: 20px; margin-top: 15px;"><b>Nem véglegesíthető az alábbi hiányosságok miatt:</b></p>
+                <ul>
+                  {% for error in sub['validation_errors'] %}
+                  <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+                </div>
+             {% endif %}
+{% endif %}
+{% endif %}
+
+
+<input type="hidden" id="sub-id_{{ loop.index }}" name="sub-id_{{ loop.index }}" value="{{ sub['submission_id'] }}">
+<input type="hidden" id="current-promise-status_{{ loop.index }}" name="current-promise-status_{{ loop.index }}" value="{{ sub['promise_status_id'] }}">
+<input type="hidden" id="politician-id_{{ loop.index }}" name="politician-id_{{ loop.index }}" value="{{ sub['politician_id'] }}">
+
+
+<div class="card-body">
+
+<div class="form-group form-row">
+    <label for="url_{{ loop.index }}" class="col-sm-2 col-form-label"><a href="{{ sub['url'] }}" target="_blank"><b>Link</b></a></label>
+    <div class="col-sm-10">
+    <input type="text" class="form-control" id="url_{{ loop.index }}" name="url_{{ loop.index }}" value="{{ sub['url'] }}">
+    </div>
+  </div>
+  <div class="form-group form-row">
+    <label for="title_{{ loop.index }}" class="col-sm-2 col-form-label"><b>Cím</b></label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="title_{{ loop.index }}"  name="title_{{ loop.index }}" value="{{ sub['title'] }}">
+    </div>
+  </div>
+   <div class="form-group form-row">
+    <label for="date_{{ loop.index }}" class="col-sm-2 col-form-label"><b>Dátum</b></label>
+    <div class="col-sm-4">
+      {% if sub['date'] != "" %}
+      <input type="text" class="form-control" id="date_{{ loop.index }}" name="date_{{ loop.index }}" value="{{ sub['date'] }}">
+    {% else %}
+    <input type="text" class="form-control" id="date_{{ loop.index }}" name="date_{{ loop.index }}" value="" placeholder="dátum beolvasása sikertelen">
+    {% endif %}
+    </div>
+    <label for="source-name_{{ loop.index }}" class="col-sm-2 col-form-label"><b>Forrás</b></label>
+      <div class = "col-sm-4">
+        <input type="text" class="form-control" id="source-name_{{ loop.index }}" name="source-name_{{ loop.index }}" value="{{ sub['source_name'] }}">
+      </div>
+
+
+  </div>
+    
+
+    <div class="form-group form-row">
+    <label for="promise_{{ loop.index }}" class="col-sm-2 col-form-label"><b>Ígéret</b></label>
+    
+ {% if sub['promise_id'] != 0 and 'draft' not in sub['custom_options'] %}
+    <div class="col-sm-10">  
+      {% else %}
+      <div class="col-sm-4">
+      {% endif %}
+
+      <select class="form-control" id="promise_{{ loop.index }}" name="promise_{{ loop.index }}">
+        {% for promise in page_properties['politicians_promises'][sub['politician_id']] %}
+
+        {% if promise['id'] == sub['promise_id'] %}
+        <option value="{{ promise['id'] }}" selected>{{ promise['id'] }} - {{ promise['title'] }}</option>
+        {% else %}
+        <option value="{{ promise['id'] }}">{{ promise['id'] }} - {{ promise['title'] }}</option>
+        {% endif %}
+
+        {% endfor %}
+        
+        {% if sub['promise_id'] == 0 %}
+
+        <option value="0" selected>Új</option>
+
+        {% endif %}
+      </select>
+    
+
+    </div>
+
+    {% if sub['promise_id'] == 0 %}
+    <div class="col-sm-6">
+    <input type="text" class="form-control" id="new-promise_{{ loop.index }}" name="new-promise_{{ loop.index }}" value="" placeholder="új ígéret megadása">
+  </div>
+  {% endif %}
+
+  {% if 'draft' in sub['custom_options'] %}
+  <div class="col-sm-6">
+    <input type="text" class="form-control" id="new-promise_{{ loop.index }}" name="new-promise_{{ loop.index }}" value="{{ page_properties['politicians_promises'][sub['politician_id']][sub['promise_id']-1]['title'] }}">
+  </div>
+{% endif %}
+ 
+
+  </div>
+
+
+
+{% if 'suggested_status' in sub and sub['suggested_status'] != 'None' %}
+{% set promise_status = sub['suggested_status'] %}
+{% else %}
+{% set promise_status = sub['promise_status_id'] %}
+{% endif %}
+
+{% if not promise_status %}
+{% set promise_status = 'none' %}
+{% endif %}
+
+
+{% for status_id, status_title in page_properties['promise_statuses'].items() %}
+
+  <div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="new-promise-status_{{ sub_counter }}" id="{{ status_id }}_{{ sub_counter }}" value="{{ status_id }}" {% if promise_status == status_id %}checked="checked"{% endif %}>
+  <label class="form-check-label" for="promise-status_{{ sub_counter }}">{{ status_title }}</label>
+</div>
+
+{% endfor %}
+
+<hr>
+
+{% if debug_mode %}
+
+DEBUG: confirm_level: {{ sub['confirm_level'] }}, confirm_value: {{ sub['confirm_value'] }}, confirmed by: {{ sub['confirmed_by'] }}
+
+{% endif %}
+
+<div class="form-group row">
+    <label for="save-action_{{ sub_counter }}" class="col-sm-2 col-form-label"><b>Művelet</b></label>
+    <div class="col-sm-10">
+          <select class="form-control" id="save-action_{{ sub_counter }}" name="save-action_{{ sub_counter }}">
+        
+        <option value="">...</option>
+        <option value="save" {% if sub['confirm_value'] == 'save' %}selected{% endif %}>mentés</option>
+        <option value="discard" {% if sub['confirm_value'] == 'discard' %}selected{% endif %}>törlés</option>
+      </select>
+    </div>
+  </div>
+
+
+
+</div>
+</div>
+      
+
+  {% endfor %}
+
+
+
+
+
+
+  {% else %}
+  <form action = "" method = "post">
+    <p><input type = "text" class = "form-control" placeholder = "e-mail" name = "email" value = "{{request.form.email}}"></p>
+    <p><input type = "password" class = "form-control" placeholder = "password" name = "password" value = "{{request.form.password}}"></p>
+    <p><input class = "btn btn-default" type = "submit" value = "belépés"><a class = "btn btn-default" href=#><s>regisztráció</s></a><hr>A szerkesztői regisztráció egyelőre manuálisan történik. Írj az <a href=mailto:igeretfigyelo.kemo@gmail.com>igeretfigyelo.kemo@gmail.com</a> címre egy rövid e-mailt arról, hogy melyik politikus programját szeretnéd kezelni!</p>
+  </form> 
+  {% endif %}  
+  <p>{{ error }}</p>
+
+</div></div>
+
+
+{% endblock %}
+

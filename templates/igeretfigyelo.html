@@ -1,0 +1,324 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+<script>
+
+function show_details(id) {
+  var details_div = document.getElementById(id + "_details");
+  var title_div = document.getElementById(id + "_title");
+  if (details_div.style.display === "none") {
+    details_div.style.display = "block";
+    title_div.style.display = "none";
+    // window.history.pushState('page2', 'Title', '/promise_' + id);
+  } else {
+    details_div.style.display = "none";
+    title_div.style.display = "table";
+    // window.history.pushState('page2', '', '/')
+  }
+}
+
+</script>
+
+{% if selected_promise_id %}
+<h1 onload = show_details({{ selected_promise_id }})>
+  {{ selected_promise_id }}
+</h1>
+{% endif %}
+
+<!-- <p class="alert alert-success" role="alert">
+          <b>Szolgálati közlemény, 2020. január 22:</b> köszönjük a Hír TV-nek és a 888.hu-nak az ajánlót! :) Legközelebb nem ártana elolvasni az apróbetűs részt, hogy milyen oldalt is promóznak...<br><br>A kormánypárti lakájmédia különféle felületeiről idetévedő Fidesz-szavazók figyelmébe szeretnénk ajánlani <a href=http://facebook.com/bestoforban>Best of Orbán: a legegyenesebb görbetükör</a> nevű testvéroldalunkat, amely Orbán Viktort és több más Fideszes politikust szembesít korábbi, rég elfeledett kijelentéseikkel. :)
+
+        </p> -->
+
+
+
+
+
+        {% if page_properties['status_message'] %}
+
+        {% if 'details' in page_properties['status_message'] %}
+
+            <table class="table table-sm table-striped">
+    
+    {% for key, value in page_properties['status_message']['details'].items() %}
+    
+    <tr><td style="text-align: right;"><b>{{ key }}</b></td><td>{% if '1982-01-18' in value %}nem sikerült megállapítani{% else %}{{ value }}{% endif %}</td></tr>
+    {% endfor %}
+
+    </table>
+
+    {% endif %}
+
+
+
+
+
+        {% if page_properties['status_message']['success'] %}
+
+        <h2 class="alert alert-success" role="alert" style="margin-top: 10px; margin-bottom: 10px">
+          {{ page_properties['status_message']['success'] }}
+
+        </h2>
+
+        {% endif %}
+
+        {% if page_properties['status_message']['error'] %}
+
+        <h2 class="alert alert-danger" role="alert" style="margin-top: 10px; margin-bottom: 10px">
+          {{ page_properties['status_message']['error'] }}
+
+        </h2>
+
+        {% endif %}
+
+
+        {% endif %}
+
+
+
+
+                  <div class="card" style="margin-top: 10px; margin-bottom: 10px;">
+  <div class="card-header">
+    Frissítés - 2020. december 1.
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Itt az Ígéretfigyelő 2.0!</h5>
+    <p class="card-text">Elkészült a rendszer továbbfejlesztett változata, amely már tetszőleges számú politikus ígéreteit képes kezelni (<a href=http://link.kemo.hu/?url=http://igeretfigyelo.hu/karacsonygergely>Karácsony Gergely</a> mellett már <a href=http://link.kemo.hu/?url=http://igeretfigyelo.hu/csoziklaszlo>Érd</a> és <a href=http://link.kemo.hu/?url=http://igeretfigyelo.hu/fulopzsolt>Szentendre</a> polgármesteri programjának teljesülését is dokumentáljuk az Ígéretfigyelőn), és egy saját fejlesztésű szerkesztői felület segíti több szerkesztő hatékonyabb együttműködését. Nézd meg videón a rendszer működését, és ha kedvet érzel részt venni a számonkérhető és felelősségteljes politikáért folyó önkéntes munkában, csatlakozz te is!</p>
+    <a href="http://link.kemo.hu/?url=http://tomanovicsgergely.hu/post/mennyire-tartjak-be-igereteiket-a-magyar-politikusok-figyeljuk-es-kerjuk-szamon-egyutt?lang=hu" class="btn btn-primary">részletek</a>
+  </div>
+</div>
+
+
+        <div class="card mb-4">
+          <img class="card-img-top" src="{{ page_properties['og-image'] }}" alt="{{ page_properties['name'] }}">
+
+
+
+          
+            <h2 class="card-header" style="text-align:center">{{ page_properties['name'] }}  <b>{{ page_properties['promise_counter'] }} </b> ígéretéből<br>eddig<b> {{ page_properties['success_counter'] }} </b> teljesült, <b> {{ page_properties['partly_counter'] }} </b> részben, <b>{{ page_properties['pending_counter'] }} </b> folyamatban</h2>
+
+              <div class="card-body">
+            
+<!--
+            <div class="progress" style="height: 30px">
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['success_percentage'] }}%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">{{ page_properties['success_percentage'] }}%</div>
+</div>
+
+-->
+
+<div class="progress" style="height: 30px">
+  <div class="progress-bar bg-success" role="progressbar" style="width: {{ page_properties['success_percentage'] }}%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">{{ page_properties['success_percentage'] }}%</div>
+  <div class="progress-bar bg-info" role="progressbar" style="width: {{ page_properties['partly_percentage'] }}%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">{{ page_properties['partly_percentage'] }}%</div>
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['pending_percentage'] }}%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">{{ page_properties['pending_percentage'] }}%</div>
+</div>
+
+
+
+<p>Teljesült ígéretek: <b>{{ page_properties['success_percentage'] }}%</b>, részben teljesült: <b>{{ page_properties['partly_percentage'] }}%</b>, folyamatban: <b>{{ page_properties['pending_percentage'] }}%</b></p>
+<div class="progress" style="height: 30px">
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['days_percentage'] }}%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">{{ page_properties['days_percentage'] }} %</div>
+</div>
+<p>Eltelt idő: <b>{{ page_properties['days_percentage'] }}%</b>, még {{ page_properties['remaining_months'] }} hónap van hátra 2024 októberéig.</p>
+</div>
+
+<div class="card-header" style="text-align: center">
+
+<span class="badge badge-secondary"> &nbsp&nbsp</span> meghirdetve <span class="badge badge-primary" style="margin-left: 25px">&nbsp&nbsp</span> folyamatban <span class="badge badge-info" style="margin-left: 25px">&nbsp&nbsp</span> részben teljesült
+<br>
+<span class="badge badge-success">&nbsp&nbsp</span> sikeres <span class="badge badge-warning"style="margin-left: 25px">&nbsp&nbsp</span> problémás  <span class="badge badge-danger"style="margin-left: 25px">&nbsp&nbsp</span> meghiúsult
+
+</div>
+
+<div class="card-body">
+
+            {% for category in page_properties['promises_list'] %}
+
+            <hr><h4>{{ category['title'] }}</h4>
+
+            {% for item in category["items"] %}
+
+            <div id = "{{ item['id'] }}_title" onclick = show_details({{ item['id'] }}) style="cursor: pointer; position: relative; left: {{ position_x }}px; display:table;">
+          
+            
+            <div style="display:table-cell">
+            {% if item["articles"]|length > 0 %}
+
+            <span class="badge badge-light">
+            <img alt ="{{ item['articles']|length }} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{{ item["articles"]|length }}</b>
+            {% else %}
+
+            <span class="badge badge-light" style="opacity:0;">
+            <img src="static/images/newspaper.png" style="width:18px; height:auto; opacity:0; margin-right: 5px;" alt ="{{ item['articles']|length }} kapcsolódó hír"><b>{{ item["articles"]|length }}</b>
+            {% endif %}
+
+            </span>
+            </div>
+
+            <div style="display:table-cell">
+
+            {% if item['status'] == "none" or not item['status'] %}  
+            <span class="badge badge-secondary">
+            {% elif item['status'] == "success" %}
+            <span class="badge badge-success">
+            {% elif item['status'] == "partly" %}
+            <span class="badge badge-info">
+            {% elif item['status'] == "pending" %}
+            <span class="badge badge-primary">
+            {% elif item['status'] == "problem" %}
+            <span class="badge badge-warning">
+            {% elif item['status'] == "fail" or item['status'] == "failed" %}
+            <span class="badge badge-danger">
+            {% endif %}
+
+            &nbsp{{ item['id'] }}&nbsp</span></div><span style="position: relative; left: 10px; display:table-cell;">{{ item['title'] }}</span>
+            
+            <br>
+            </div>
+
+            
+                <div id = "{{ item['id'] }}_details" style="display: none;">
+                <div class="card">
+                    <div class="card-header" onclick = show_details({{ item['id'] }})>
+                      <h4>
+
+                                  {% if item['status'] == "none" or not item['status'] %}  
+                                  <span class="badge badge-secondary">{{ item['id'] }}
+                                  {% elif item['status'] == "success" %}
+                                  <span class="badge badge-success">{{ item['id'] }} | sikeres
+                                  {% elif item['status'] == "pending" %}
+                                  <span class="badge badge-primary">{{ item['id'] }} | folyamatban
+                                  {% elif item['status'] == "problem" %}
+                                  <span class="badge badge-warning">{{ item['id'] }} | problémás
+                                  {% elif item['status'] == "fail" or item['status'] == "failed" %}
+                                  <span class="badge badge-danger">{{ item['id'] }} | meghiúsult
+                                  {% elif item['status'] == "partly" %}
+                                  <span class="badge badge-info">{{ item['id'] }} | részben teljesült
+                                  {% endif %}
+                                  </span>
+                                  {{ item['title'] }}</h4>
+
+
+
+
+
+                    </div>
+
+            
+            <ul class="list-group list-group-flush">
+              {% if item['articles']|length > 0 %}
+              {% for article in item['articles'] %}
+
+            <li class="list-group-item"><a href="/link?url={{ article['url'] }}">{{ article['title'] }}</a><br><small>({{ article['source'] }}, {{ article['date'].strftime('%Y-%m-%d') }})</small></li>
+            {% endfor %}
+            {% endif %}
+            <li class="list-group-item">
+                <form class="form-inline" name = "form_{{ item['id'] }}" method="post" action="">
+  
+
+  <div class="form-group mb-2">
+    Hír ajánlása
+  </div>
+  <div class="form-group mx-sm-3 mb-2">
+    <input type="text" class="form-control" size=40 name="submit_article_{{ permalink }}_{{ item['id']}}" placeholder="http://index.hu/teljesult-igeretrol-szolo-cikk">
+  </div>
+  <button type="submit" class="btn btn-primary mb-2">Linkbeküldés</button>
+</form>
+        </li>
+    </ul>
+
+            
+
+            </div>
+            </div>
+
+            {% if item["subitems"]|length > 0 %}
+
+            
+            
+            {% for subitem in item["subitems"] %}
+            <div style = "position: relative; left: 75px; display:table;">
+
+             <p><span class="badge badge-secondary", style = "opacity: 0.5; display:table-cell;">{{ subitem['parent_id'] }}{{ subitem['id'] }}</span><span style="position: relative; left: 10px; display:table-cell;">{{ subitem['title'] }}</span></p>
+
+              </div>
+      
+            {% endfor %}
+            
+           
+
+            {% endif %}
+            
+
+
+
+            {% endfor %}
+            {% endfor %}
+            
+<hr>
+
+
+            
+
+
+
+<h2>A lista folyamatosan bővül!</h2><p>Ha olyan ígéretről szóló hírt találsz, ami még nem szerepel a listán, itt jelezheted az oldal adminisztrátorainak (konkrét, meglévő ígéretről szóló hírt az adminok munkájának megkönnyítése érdekében kérjük az adott ígéretre kattintva küldj)</p>
+<form class="form-inline" name = "form_new" method="post" action="">
+  <div class="form-group mx-sm-3 mb-2">
+    <input type="text" size=40 class="form-control" name="submit_article_{{ permalink }}_new" placeholder="https://index.hu/teljesult-igeretrol-szolo-cikk">
+  </div>
+  <button type="submit" class="btn btn-primary mb-2">Linkbeküldés</button>
+</form>
+           permalink {{ permalink }}
+
+          <div class="card-footer text-muted">
+            <div id="disqus_thread"></div>
+            <script>
+
+
+
+{% if permalink == 'karacsonygergely' %}
+
+var disqus_config = function () {
+this.page.url = "igeretfigyelo_{{ permalink }}";  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = "tomanovicsgergely"; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tomanovicsgergely.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+
+
+{% else %}
+
+var disqus_config = function () {
+this.page.url = "http://igeretfigyelo.hu/{{ permalink }}";  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = "igeretfigyelo"; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://igeretfigyelo.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+
+
+{% endif %}
+
+
+</script>
+
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+          </div>
+
+        </div></div>
+        
+
+
+
+{% endblock %}
+
+     

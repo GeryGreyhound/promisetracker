@@ -1,0 +1,72 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+<hr>
+<div class="card mb-4">
+	<div class = "card-header">
+		<h4>Regisztráció szerkesztői meghívóval</h4>
+	</div>
+   <div class="card-body">
+
+    {% if page_properties["errors"] %}
+    <div class="alert alert-danger" role="alert">
+      <ul>
+      {% for error in page_properties['errors'] %}
+      <li>{{ error }}</li>
+      {% endfor %}
+</div>
+{% endif %}
+
+{% if page_properties["success"] %}
+<div class="alert alert-success" role="alert">
+  Sikeres regisztráció! Bejelentkezés az <a href="/ifadmin">igeretfigyelo.hu/ifadmin</a> linken.
+</div>
+{% endif %}
+
+   
+    <form action="/register" method="post">
+      
+      
+      <div class="form-group">
+    <label for="exampleFormControlSelect1">Választott politikusok (csak adminisztrátor módosíthatja)</label>
+    
+
+{% for politician in page_properties['politicians'] %}
+
+<div class="form-check">
+  <input {% if page_properties['selected_politician'] == politician or politician == 'shrekszilard' %} checked {% endif %} disabled class="form-check-input" type="checkbox" value = {{ politician }} id="defaultCheck1">
+  <label class="form-check-label" for="defaultCheck1">
+  {{ page_properties['politicians'][politician] }}
+  </label>
+</div>
+
+
+{% endfor %}
+
+  </div>
+      <label for full_name>Megjelenített név (nyilvánosan látható lesz egyes oldalakon)</label>
+      <input style="margin-bottom: 15px;" id="display_name" name = "display_name" class="form-control" type="text" value="{{ page_properties['display_name'] }}">
+   
+<label for invite_email>E-mail cím</label>
+    <input style="margin-bottom: 15px;" id="invite_email" autocomplete="username email" name = "invite_email" class="form-control" type="text" value="{{ page_properties['email'] }}">
+
+   <div class="form-row" style="margin-bottom: 15px;" >
+    <div class="form-group col-md-6">
+      <label for="password1">Jelszó</label>
+      <input type="password" class="form-control" id="password1" name="password1" autocomplete="new-password">
+    </div>
+    <div class="form-group col-md-6">
+      <label for="password2">Jelszó újra</label>
+      <input type="password" class="form-control" id="password1" name="password2" autocomplete="new-password">
+    </div>
+  </div>
+  {% if "disabled" in page_properties %}
+  <button class="btn btn-secondary" disabled>regisztráció</button>
+  {% else %}
+  <button type="submit" class="btn btn-primary">regisztráció</button>
+  {% endif %}
+   
+ </form>
+
+</div>
+</div>
+{% endblock %}

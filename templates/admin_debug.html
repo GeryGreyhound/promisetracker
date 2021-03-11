@@ -1,0 +1,48 @@
+{% extends "igeretfigyelo_layout.html" %}
+
+{% block content %}
+
+Anyád
+<hr>
+{% for sub in submissions_list %}
+
+{{ loop.index }} | {{ sub }} <hr>
+
+<div class="{{ card_class }}" style="margin-top: 25px;">
+<div class="card-header">
+  <h6>
+#{{ sub['submission_id'] }} | Beküldte: {{ sub['submitted_by'] }} | {{ sub['submission_date'] }} | {{ sub['politician_name'] }}
+{% if card_sub_title %}
+<hr>
+{{ card_sub_title }}
+{% endif %}
+</h6>
+</div>
+</div>
+<hr>
+
+
+{% if 'validation_errors' in sub %}
+
+Validation errors: {{ sub['validation_errors'] }}
+
+{% for error in sub['validation_errors'] %}
+  <li>{{ error }}</li>
+  {% endfor %}
+
+  {% if 'confirm_value' in sub %}
+  Confirm_value: van: {{ confirm_value|length }}
+  {% else %}
+  Nincs confrim value
+  {% endif %}
+
+{% endif %}
+
+
+
+{% endfor %}
+
+
+
+{% endblock %}
+

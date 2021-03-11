@@ -1,0 +1,33 @@
+{% extends "kadavis_layout.html" %}
+
+{% block content %}
+<h1>Register a new account</h1>
+<hr>
+<div>
+                
+
+	{% from "_formhelpers.html" import render_field %}
+	<form method=post action = "/kadmin/register">
+		<dl>
+
+			{{ render_field(form.email) }}
+			{{ render_field(form.first_name) }}
+			{{ render_field(form.last_name) }}
+			{{ render_field(form.password) }}
+			{{ render_field(form.confirm) }}
+			{{ render_field(form.accept_tos) }}
+
+		</dl>
+
+	<p><input type=submit value = Register></p>
+</form>
+
+{% if error %}
+
+<p class = "error"><strong>Error:</strong> {{ error }}</p>
+
+{% endif %}
+			
+</div>
+
+{% endblock %}

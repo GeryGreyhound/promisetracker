@@ -1,0 +1,238 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+<script>
+
+function show_details(id) {
+  var details_div = document.getElementById(id + "_details");
+  var title_div = document.getElementById(id + "_title");
+  if (details_div.style.display === "none") {
+    details_div.style.display = "block";
+    title_div.style.display = "none";
+    // window.history.pushState('page2', 'Title', '/promise_' + id);
+  } else {
+    details_div.style.display = "none";
+    title_div.style.display = "block";
+    // window.history.pushState('page2', '', '/')
+  }
+}
+
+</script>
+
+
+        {% if page_properties['status_message'] %}
+
+        {% if page_properties['status_message']['success'] %}
+
+        <div class="alert alert-success" role="alert">
+          {{ page_properties['status_message']['success'] }}
+                  <script>
+          alert(" {{ page_properties['status_message']['success'] }}");
+        </script>
+
+        </div>
+
+        {% endif %}
+
+        {% if page_properties['status_message']['error'] %}
+
+        <script>
+          alert("{{ page_properties['status_message']['error'] }}");
+        </script>
+
+        <div class="alert alert-danger" role="alert">
+          {{ page_properties['status_message']['error'] }}
+
+        </div>
+
+        {% endif %}
+
+
+        {% endif %}
+
+
+        <div class="card mb-4">
+          <img class="card-img-top" src="{{ page_properties['og-image'] }}" alt="{{ page_properties['name'] }}">
+
+          
+            <h2 class="card-header" style="text-align:center">{{ page_properties['name'] }}  <b>{{ page_properties['promise_counter'] }} </b> ígéretéből<br>eddig<b> {{ page_properties['success_counter'] }} </b> teljesült, <b>{{ page_properties['pending_counter'] }} </b> folyamatban</h2>
+
+              <div class="card-body">
+            
+<!--
+            <div class="progress" style="height: 30px">
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['success_percentage'] }}%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">{{ page_properties['success_percentage'] }}%</div>
+</div>
+
+-->
+
+<div class="progress" style="height: 30px">
+  <div class="progress-bar bg-success" role="progressbar" style="width: {{ page_properties['success_percentage'] }}%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">{{ page_properties['success_percentage'] }}%</div>
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['pending_percentage'] }}%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">{{ page_properties['pending_percentage'] }}%</div>
+</div>
+
+
+
+<p>Teljesült ígéretek: <b>{{ page_properties['success_percentage'] }}%</b>, folyamatban: <b>{{ page_properties['pending_percentage'] }}%</b></p>
+<div class="progress" style="height: 30px">
+  <div class="progress-bar" role="progressbar" style="width: {{ page_properties['days_percentage'] }}%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">{{ page_properties['days_percentage'] }} %</div>
+</div>
+<p>Eltelt idő: <b>{{ page_properties['days_percentage'] }}%</b>, még {{ page_properties['remaining_months'] }} hónap van hátra 2024 októberéig.</p>
+</div>
+
+<div class="card-header">
+
+<span class="badge badge-secondary">&nbsp&nbsp</span> meghirdetve <span class="badge badge-primary">&nbsp&nbsp</span> folyamatban <span class="badge badge-info">&nbsp&nbsp</span> részben teljesült <span class="badge badge-success">&nbsp&nbsp</span> sikeres <span class="badge badge-warning">&nbsp&nbsp</span> problémás  <span class="badge badge-danger">&nbsp&nbsp</span> meghiúsult
+
+</div>
+
+<div class="card-body">
+
+            {% for category in page_properties['promises_list'] %}
+
+            <hr><h4>{{ category['title'] }}</h4>
+
+            {% for item in category["items"] %}
+
+            <div id = "{{ item['id'] }}_title" onclick = show_details({{ item['id'] }}) style="cursor: pointer; position: relative; left: {{ position_x }}px; display:block;">
+          
+            
+            
+            {% if item["articles"]|length > 0 %}
+
+            <span class="badge badge-light">
+            <img alt ="{{ item['articles']|length }} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{{ item["articles"]|length }}</b>
+            {% else %}
+
+            <span class="badge badge-light" style="opacity:0;">
+            <img src="static/images/newspaper.png" style="width:18px; height:auto; opacity:0; margin-right: 5px;" alt ="{{ item['articles']|length }} kapcsolódó hír"><b>{{ item["articles"]|length }}</b>
+            {% endif %}
+
+            </span>
+            
+
+            
+
+            {% if item['status'] == "none" or not item['status'] %}  
+            <span class="badge badge-secondary" style = "position: relative; vertical-align: top; top: 4px;">
+            {% elif item['status'] == "success" %}
+            <span class="badge badge-success" style = "position: relative; vertical-align: top; top: 4px;">
+            {% elif item['status'] == "partly" %}
+            <span class="badge badge-info" style = "position: relative; vertical-align: top; top: 4px;">
+            {% elif item['status'] == "pending" %}
+            <span class="badge badge-primary" style = "position: relative; vertical-align: top; top: 4px;">
+            {% elif item['status'] == "problem" %}
+            <span class="badge badge-warning" style = "position: relative; vertical-align: top; top: 4px;">
+            {% elif item['status'] == "cancelled" %}
+            <span class="badge badge-danger" style = "position: relative; vertical-align: top; top: 4px;">
+            {% endif %}
+
+            &nbsp{{ item['id'] }}&nbsp</span>
+            <span style="position: relative; left: 10px; display: inline-block; max-width: calc(100% - 30px);">{{ item['title'] }}</span>
+            
+            <br>
+            </div>
+
+            
+                <div id = "{{ item['id'] }}_details" style="display: none;">
+                <div class="card">
+                    <div class="card-header" onclick = show_details({{ item['id'] }})>
+                      <h4>
+
+                                  {% if item['status'] == "none" or not item['status'] %}  
+                                  <span class="badge badge-secondary">{{ item['id'] }} | meghirdetve
+                                  {% elif item['status'] == "success" %}
+                                  <span class="badge badge-success">{{ item['id'] }} | sikeres
+                                  {% elif item['status'] == "pending" %}
+                                  <span class="badge badge-primary">{{ item['id'] }} | folyamatban
+                                  {% elif item['status'] == "problem" %}
+                                  <span class="badge badge-warning">{{ item['id'] }} | problémás
+                                  {% elif item['status'] == "cancelled" %}
+                                  <span class="badge badge-danger">{{ item['id'] }} | meghiúsult
+                                  {% elif item['status'] == "partly" %}
+                                  <span class="badge badge-info">{{ item['id'] }} | részben teljesült
+                                  {% endif %}
+                                  </span>
+                                  {{ item['title'] }}</h4>
+
+
+
+
+
+                    </div>
+
+            
+            <ul class="list-group list-group-flush">
+              {% if item[6] %}
+            <li class="list-group-item"><a href={{ item[5] }}>{{ item[6] }}</a><br><small>({{ item[7] }})</small></li>
+            {% endif %}
+            <li class="list-group-item">
+                <form class="form-inline" name = "form_{{ item['id'] }}" method="post" action="">
+  
+
+  <div class="form-group mb-2">
+    Hír ajánlása
+  </div>
+  <div class="form-group mx-sm-3 mb-2">
+    <input type="text" class="form-control" size=40 name="submit_article_{{ permalink }}_{{ item['id']}}" placeholder="http://index.hu/teljesult-igeretrol-szolo-cikk">
+  </div>
+  <button type="submit" class="btn btn-primary mb-2">Linkbeküldés</button>
+</form>
+        </li>
+    </ul>
+
+            
+
+            </div>
+            </div>
+
+
+
+            {% endfor %}
+            {% endfor %}
+            
+<hr>
+
+
+            
+
+
+
+<h2>A lista folyamatosan bővül!</h2><p>Ha olyan ígéretről szóló hírt találsz, ami még nem szerepel a listán, itt jelezheted az oldal adminisztrátorainak (konkrét, meglévő ígéretről szóló hírt az adminok munkájának megkönnyítése érdekében kérjük az adott ígéretre kattintva küldj)</p>
+<form class="form-inline" name = "form_new" method="post" action="">
+  <div class="form-group mx-sm-3 mb-2">
+    <input type="text" size=40 class="form-control" name="submit_article_{{ permalink }}_new" placeholder="https://index.hu/teljesult-igeretrol-szolo-cikk">
+  </div>
+  <button type="submit" class="btn btn-primary mb-2">Linkbeküldés</button>
+</form>
+           
+
+          <div class="card-footer text-muted">
+            <div id="disqus_thread"></div>
+            <script>
+var disqus_config = function () {
+this.page.url = "igeretfigyelo_{{ permalink }}";  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = "tomanovicsgergely"; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tomanovicsgergely.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+          </div>
+
+        </div></div>
+        
+
+
+-->
+
+
+
+{% endblock %}
+
+     

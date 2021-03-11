@@ -1,0 +1,16 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+<div class="card mb-4">
+	<h2 class="card-header">{{ page_properties['name'] }} ígéreteivel kapcsolatos összes hír</h2>
+	<div class="card-body">
+
+{% for article in news %}
+
+<p><a href="/link?url={{article['url']}}">{{article['title']}}</a><br><small>{{article['source']}}, {{article['date']}}</small></p>
+
+{% endfor %}
+
+</div></div>
+
+{% endblock %}
