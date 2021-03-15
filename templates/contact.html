@@ -1,0 +1,161 @@
+{% extends "igeretfigyelo_layout.html" %}
+{% block content %}
+
+{% set captcha_verify = True %}
+
+{% if "from" in request.args and request.args.get("from") == "portfolio_page" %}
+
+{% set strings_message_successfully_sent = "Message successfully sent" %}
+{% set strings_send_message = "Get in touch! " %}
+{% set strings_name = "Your name" %}
+{% set strings_email = "Your e-mail address" %}
+{% set strings_subject = "Subject" %}
+{% set strings_subject_value = "Contact from your Portfolio page" %}
+{% set strings_message = "Message text" %}
+{% set strings_button_text = "Send" %}
+{% set captcha_verify = False %}
+
+
+{% else %}
+
+{% set strings_message_successfully_sent = "Üzenet sikeresen elküldve" %}
+{% set strings_send_message = "Küldj üzenetet" %}
+{% set strings_name = "Neved" %}
+{% set strings_email = "E-mail címed" %}
+{% set strings_subject = "Tárgy (nem kötelező)" %}
+
+{% set strings_message = "Üzenet szövege" %}
+{% set strings_button_text = "Küldés" %}
+
+
+{% endif%}
+
+
+
+        <!-- Blog Post -->
+        <div class="card mb-4">
+
+
+{% if success %}
+            <h1 class = card-header><div class="alert alert-success" role="alert">{{ strings_message_successfully_sent }}</div></h1>
+            {% else %}
+          <h1 class = card-header>{{ strings_send_message }}</h1>
+          <div class="card-body">
+                <div class="row">
+
+        <!--Grid column-->
+        <div class="col-md-9 mb-md-0 mb-5">
+            <form id="contact-form" name="contact-form" action="/contact" method="POST">
+
+                <!--Grid row-->
+                <div class="row" style="margin-bottom: 15px;">
+
+                    <!--Grid column-->
+                    <div class="col-md-6">
+                        <div class="md-form mb-0">
+                            <label for="name" class="">{{ strings_name }}</label>
+                            <input type="text" id="name" name="name" class="form-control">
+                            
+                        </div>
+                    </div>
+                    <!--Grid column-->
+
+                    <!--Grid column-->
+                    <div class="col-md-6">
+                        <div class="md-form mb-0">
+                            <label for="email" class="">{{ strings_email }}</label>
+                            <input type="text" id="email" name="email" class="form-control">
+                            
+                        </div>
+                    </div>
+                    <!--Grid column-->
+
+                </div>
+                <!--Grid row-->
+
+                <!--Grid row-->
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-md-12">
+                        <div class="md-form mb-0">
+                             <label for="subject" class="">{{ strings_subject }}</label>
+                             {% if strings_subject_value %}
+                            <input type="text" id="subject" name="subject" class="form-control" disabled value = "{{ strings_subject_value }}">
+                            <input type="text" id="subject" name="subject" class="form-control" hidden value = "{{ strings_subject_value }}">
+                            {% else %}
+                            <input type="text" id="subject" name="subject" class="form-control">
+                            {% endif %}
+                           
+                        </div>
+                    </div>
+                </div>
+                <!--Grid row-->
+
+                <!--Grid row-->
+                <div class="row" style="margin-bottom: 15px;">
+
+                    <!--Grid column-->
+                    <div class="col-md-12">
+
+                        <div class="md-form">
+                            <label for="message">{{ strings_message }}</label>
+                            <textarea type="text" id="message" name="message" rows="7" class="form-control md-textarea"></textarea>
+                            
+                        </div>
+
+                    </div>
+                </div>
+
+                {% if captcha_verify %}
+
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-md-12">
+                        <div class="md-form mb-0">
+                             <label for="verify" class="">Ha nem vagy robot: mennyi 5 meg 2?</label>
+                            <input type="text" id="verify" name="verify" class="form-control">
+                           
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+
+                <input hidden value = "7" type="text" id="verify" name="verify" class="form-control">
+
+                {% endif %}
+                <!--Grid row-->
+
+            </form>
+
+            <div class="text-center text-md-left">
+                <a class="btn btn-primary" onclick="document.getElementById('contact-form').submit();">{{ strings_button_text }}</a>
+            </div>
+            <div class="status"></div>
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-md-3 text-center">
+            <ul class="list-unstyled mb-0">
+                <li><p><b>Messenger:</b><br><a href=http://m.me/tomanovicsgergely>m.me/tomanovicsgergely</a></p></li>
+
+                <li><p><b>E-mail:</b><br><a href=mailto:gergely.tomanovics@gmail.com>gergely.tomanovics@gmail.com</a></p></li>
+            </ul>
+        </div>
+        <!--Grid column-->
+
+
+
+    </div>
+
+
+
+            <!-- <a href="#" class="btn btn-primary">fsdfsdfsdfsdfsdfsdfsdf</a> -->
+
+          </div>
+          {% endif %}
+        </div>
+
+
+{% endblock %}
+
+     

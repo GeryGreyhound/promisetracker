@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfFileReader
 import psycopg2
+from psycopg2.extensions import AsIs
 
 import datetime
 import requests
@@ -20,27 +21,121 @@ class DatabaseOperations:
 
 dbc = DatabaseOperations()
 
-def sql_injection_filter(string):
+class Politician:
+	def __init__(self, id):
+		self.id = id
+		self.get_basic_data()
+		if self.existent:
+			self.get_promise_list()
 
-	if string:
-	
-		if string.find("DROP") != -1:
-			return "error_suspicious_string"
-		elif string.find("1=1") != -1 or string.find("1 = 1") != -1:
-			return "error_suspicious_string"
-		elif ";" in string:
-			return "error_suspicious_string"
+	def create_from_csv(self, csv_file):
+		pass
+
+	def get_basic_data(self):
+		query_string = "SELECT * FROM politicians WHERE id = (%s)"
+		query_data = [self.id]
+
+		dbc.cursor.execute(query_string, query_data)
+		self.basic_data = dbc.cursor.fetchone()
+
+		if self.basic_data:
+			self.existent = True
+			self.name = self.basic_data[1]
+			self.location = self.basic_data[2]
+			self.position = self.basic_data[3]
+			self.last_elected = self.basic_data[4]
+			self.program_title = self.basic_data[5]
+			self.first_elected = self.basic_data[6]
+
+			if not self.last_elected:
+				self.last_elected = self.elected
+
+			dbc.cursor.execute("SELECT * FROM elections WHERE dt = (%s)", [self.first_elected])
+			self.start_date = dbc.cursor.fetchone()[1]
+			dbc.cursor.execute("SELECT * FROM elections WHERE id = (%s)", [self.last_elected])
+			self.end_date = dbc.cursor.fetchone()[1]
+
 		else:
-			return string
+			self.existent = False
 
-	else:
-		return None
+
+	def get_promise_list(self):
+		pass
+		self.promise_list = PromiseList(self.id)
+		# ehelyett a class PromiseList leg7yen inkább egy kölön class, és legyen egy self.promise_list ojjektum
+
+	
+		'''for category in promise_categories:
+			category_details = dict()
+			category_details["title"] = category[2]
+			category_id = category[1]
+			dbc.cursor.execute ("SELECT * FROM promises WHERE politician_id = %s AND category_id = %s AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id", [politician, AsIs(str(category_id))])
+			category_promises = dbc.cursor.fetchall()
+
+			for promise in category_promises:
+				promise_details = dict()
+
+				promise_id = promise[0]
+				promise_counter += 1
+				dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id = (%s) ORDER BY article_date DESC", [self.id, promise_id])
+		'''
 
 class PromiseList:
 	def __init__(self, politician_id):
+		self.status_counters = {"promises" : 0, "success" : 0, "pending" : 0, "fail" : 0, "partly" : 0}
+		self.politician_id = politician_id
+		self.promise_list = list()
+
+	def get_from_database(self):
+		query_string = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
+		query_data = [self.politician_id]
+
+		dbc.cursor.execute(query_string, query_data)
+		self.promise_categories = dbc.cursor.fetchall()
+
+		for category in self.promise_categories:
+			category_details = dict()
+			category_id = category[1]
+			category_details["title"] = category[2]
+
+			promises_in_category = list()
+
+			promises_query = "SELECT * FROM promises WHERE politician_id = %s AND category_id = %s AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id",
+			query_data = politician, [AsIs(str(category_id))]
+			dbc.cursor.execute(promises_query, query_data)
+			category_promises = dbc.cursor.fetchall()
+
+			category_promises_list = list()
+
+			for promise in category_promises:
+				promise = Promise()
+				self.status_counter["promises"] += 1
+
+				promise.id = promise[0]
+				promise.articles = list()
+
+				query_string = "SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id =  (%s) ORDER BY article_date DESC"
+				query_data = [politician_id, promise_id]
+				dbc.cursor.execute(query_string, query_data)
+				self.raw_data = dbc.cursor.fetchall()
+
+
+
+				
+
+
+
+
+class Promise:
+	def __init__(self):
+		# self.articles legyen az ígérethez kapcsolódó cikkek
+		# mindegyik cikk is egy Article objektum, az Article class-ban lesz definiálva a létrejövése adatbázisból (Article.get_from_databased)
 		pass
 
-	def create(self):
+	def get_from_database(self, policitian_id, promise_id):
+		pass
+
+	def get_articles(self):
 		pass
 
 class Article:
@@ -175,6 +270,9 @@ class Article:
 					self.article_title = None
 					self.errors.append("get_title_error")
 
+	def get_from_database(self):
+		pass
+
 	def add_to_submissions(self, politician_id, promise_id, submitter_name, submitter_ip, submit_date, suggested_status):
 
 		dbc = DatabaseOperations()
@@ -194,71 +292,101 @@ class Article:
 
 		dbc.cursor.execute(query_string, query_data)
 
-class Politician:
-	def __init__(self, id):
-		self.id = id
-		self.get_basic_data()
-		if self.existent:
-			self.get_promise_list()
 
-	def create_from_csv(self, csv_file):
-		pass
+class Page:
+	def __init__(self):
+		self.defaults = {"language" : "hu", "google_analytics_id" : "UA-85693466-4", "facebook_page_id" : "igeretfigyelo", }
 
-	def get_basic_data(self):
-		query_string = "SELECT * FROM politicians WHERE id = (%s)"
-		query_data = [self.id]
+		try:
+			if "language" in session:
+				self.language = session["language"]
+			else:
+				self.language = self.defaults["language"]
+		except:
+			# no session mode for testing
+			self.language = self.defaults["language"]
 
-		dbc.cursor.execute(query_string, query_data)
-		self.basic_data = dbc.cursor.fetchone()
+		# default values for page generator
+		self.og_title = "Ígéretfigyelő - Promisetracker v2"
+		self.og_description = "Ez itt a leírás"
+		self.og_image = ""
+		self.html_title = ""
 
-		if self.basic_data:
-			self.existent = True
-			self.name = self.basic_data[1]
-			self.location = self.basic_data[2]
-			self.position = self.basic_data[3]
-			self.last_elected = self.basic_data[4]
-			self.program_title = self.basic_data[5]
-			self.first_elected = self.basic_data[6]
+	def construct_html(self):
 
-			if not self.last_elected:
-				self.last_elected = self.elected
+		html_head = '''
+		<!DOCTYPE html>
+		<html lang="{}">
+		<head>
+		<script async src="https://www.googletagmanager.com/gtag/js?id={}"></script>
+		<script>
+  			window.dataLayer = window.dataLayer || [];
+  			function gtag(){{dataLayer.push(arguments);}}
+  			gtag('js', new Date());
+  			gtag('config', '{}');
+		</script>
 
-			dbc.cursor.execute("SELECT * FROM elections WHERE dt = (%s)", [self.first_elected])
-			self.start_date = dbc.cursor.fetchone()[1]
-			dbc.cursor.execute("SELECT * FROM elections WHERE id = (%s)", [self.last_elected])
-			self.end_date = dbc.cursor.fetchone()[1]
+		<script src='https://kit.fontawesome.com/a076d05399.js'></script>
 
-		else:
-			self.existent = False
+		<meta charset="utf-8">
+  		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ 		<meta name="description" content="">
+  		<meta name="author" content="">
+  		<meta property="og:title" content="{}" />
+  		<meta property="og:description" content="{}" />
+  		<meta property="og:image" content="http://www.igeretfigyelo.hu/{}" />
 
+  		<title>{}</title>
 
-	def get_promise_list(self):
+  		<!-- Bootstrap core CSS -->
+  		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
-		self.status_counters = {"promises" : 0, "success" : 0, "pending" : 0, "fail" : 0, "partly" : 0}
+  		<!-- Custom styles for this template -->
+  		<link href="/static/css/blog-home.css" rel="stylesheet">
 
-		query_string = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
-		query_data = [self.id]
+  		</head>
+		'''.format(self.language,
+				   self.defaults["google_analytics_id"],
+				   self.defaults["google_analytics_id"],
+				   self.og_title,
+				   self.og_description,
+				   self.og_image,
+				   self.html_title
+				   )
 
-		dbc.cursor.execute(query_string, query_data)
-		self.promise_categories = dbc.cursor.fetchall()
+		navbar = '''
+		  <!-- Navigation -->
+		  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+		  <div class="container">
+		  <a class="navbar-brand" href="/">Ígéretfigyelő</a>
+		  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		  <span class="navbar-toggler-icon"></span>
+		  </button>
+		
+		  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		    <ul class="navbar-nav mr-auto">
+		      <li class="nav-item">
+		        <a class="nav-link" href="/about">Mi ez és kik csinálják?</a>
+		      </li>
+		      <li class="nav-item dropdown">
+		        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		          Politikusok
+		        </a>
+		        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+		          <a class="dropdown-item" href="/csoziklaszlo">Csőzik László (Érd)</a>
+		          <a class="dropdown-item" href="/fulopzsolt">Fülöp Zsolt (Szentendre)</a>
+		          <a class="dropdown-item" href="/karacsonygergely">Karácsony Gergely (Budapest)</a>
+		        </div>
+		      </li>
+		      <li class="nav-item">
+		        <a class="nav-link" href="/contact">Kapcsolat</a>
+		      </li>
+		    </ul>
+		  </div>
+		</nav>
+		'''
 
-		for category in promise_categories:
-			category_details = dict()
-			category_details["title"] = category[2]
-			category_id = category[1]
-			dbc.cursor.execute ("SELECT * FROM promises WHERE politician_id = %s AND category_id = %s AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id", [politician, AsIs(str(category_id))])
-			category_promises = dbc.cursor.fetchall()
-
-			for promise in category_promises:
-				promise_details = dict()
-
-				promise_id = promise[0]
-				promise_counter += 1
-				dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id = (%s) ORDER BY article_date DESC", [self.id, promise_id])
-
-
-
-
+		self.html_page = html_head + "\n" + navbar
 
 
 

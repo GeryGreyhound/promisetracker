@@ -67,3 +67,14 @@ if teszt_pol.existent:
 	print(teszt_pol.promise_categories)
 else:
 	print("Politician does not exist")
+
+
+teszt_pg = Page()
+teszt_pg.og_title = "testing OOP HTML generator - changed title"
+teszt_pg.og_description = "Here comes the changed description"
+
+teszt_pg.construct_html()
+
+with open ("teszt.html", "w") as htmlfile:
+	htmlfile.write(teszt_pg.html_page)
+

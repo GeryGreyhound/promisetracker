@@ -2,6 +2,7 @@
 /database.conf
 /email.conf
 /testing.py
+/oopteszt.py
 /mod_cloudflare/
 /temp/
 /__pycache__/

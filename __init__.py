@@ -14,8 +14,14 @@ import smtplib
 import socket
 import time
 
-from common_functions import send_email
+os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
+sys.path.insert(0, os.getcwd())
 
+from common_functions import send_email
+import new_refactored_oop_functions as promisetracker_v2
+
+elsosori_valtozo = promisetracker_v2.Politician("karacsonygergely")
+print("Vau!")
 
 promise_statuses = {"none" : "meghirdetve", "pending" : "folyamatban", "partly" : "részben", "success" : "sikeres", "problem" : "problémás", "failed" : "meghiúsult"}
 
@@ -151,6 +157,12 @@ def fetch_article_data(article_url, soup):
 
 @app.before_request
 def before_request_func():
+	
+	if not "version" in session or "v" in request.args:
+		session["version"] = request.args.get("v")
+		if not session["version"]:
+			session["version"] = "1"
+
 	headers_list = request.headers.getlist("X-Forwarded-For")
 	user_ip = headers_list[0] if headers_list else request.remote_addr
 
@@ -192,6 +204,31 @@ def about_page():
 	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
 
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
+
+@app.route("/contact", methods = ["POST", "GET"])
+def contact_page():
+	page_properties = dict()
+	page_properties["og-title"] = "ÍgéretFigyelő"
+	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
+
+	if request.method == "POST":
+		from_address = request.form.get("email")
+		from_name = request.form.get("name")
+		subject = request.form.get("subject")
+		text = request.form.get("message")
+		verify = request.form.get("verify")
+
+		if str(verify) != "7":
+			vf = "[Ígéretfigyelő spam gyanús]"
+		else:
+			vf = "[Ígéretfigyelő contact]"
+
+		send_email(vf + subject, {"html" : text, "text" : text}, {"email_list" : ["igeretfigyelo.kemo@gmail.com"]})
+
+		return render_template("contact.html", page_properties = page_properties, static_content = "static_content", success = True)
+
+	else:	
+		return render_template("contact.html", page_properties = page_properties, static_content = "static_content")
 
 @app.route("/accept_invite")
 def invite():
@@ -617,6 +654,11 @@ class r_error:
 @app.route("/<politician>", methods = ["POST", "GET"])
 def igeretfigyelo_page(politician):
 
+	if session["version"] == "2":
+		pass
+	else:
+		pass
+
 	# politician = request.args.get("politician_name")
 	selected_promise_id = request.args.get("promise_id")
 	dbc = DatabaseOperations()
@@ -752,6 +794,12 @@ def igeretfigyelo_page(politician):
 
 		
 		# dbc.cursor.execute("SELECT * FROM promise_categories JOIN promises ON promises.category_id = promise_categories.category_id WHERE promises.politician_id = '" + politician + "' ORDER BY promises.id;")
+		
+
+
+
+		# refactor class PromiseList innen!!!
+
 		dbc.cursor.execute ("SELECT * FROM promise_categories WHERE politician_id = '" + politician + "' ORDER BY category_id")
 		promise_categories = dbc.cursor.fetchall()
 

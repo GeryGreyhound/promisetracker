@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 
 <head>
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -45,40 +45,42 @@
 
 <body>
 
-  
-
-<div class="container">
-
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container">
-    <a class="navbar-brand" href="/">Ígéretfigyelő</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+      <a class="navbar-brand" href="/">ÍGÉRETFIGYELŐ.HU</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item">
-        <a class="nav-link" href="/about">Mi ez és kik csinálják?</a>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Politikusok
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="/csoziklaszlo">Csőzik László (Érd)</a>
-          <a class="dropdown-item" href="/fulopzsolt">Fülöp Zsolt (Szentendre)</a>
-          <a class="dropdown-item" href="/karacsonygergely">Karácsony Gergely (Budapest)</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/contact">Kapcsolat</a>
-      </li>
-    </ul>
-  </div>
-</nav>
+          {% for page in static_content['pages_list'] %}
 
+          {% if static_content['active_page'] == page %}
+
+          <li class="nav-item active">
+
+          {% else %}
+
+          <li class="nav-item">
+
+          {% endif %}
+
+            <a class="nav-link" href="/{{ pages_params[page]['url'] }}">{{ pages_params[page]['name'][lang] }}
+              <!-- <span class="sr-only">(current)</span> -->
+            </a>
+          </li>
+
+          {% endfor %}
+
+
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+<div class="container">
 
   {% if not "activity_log" in request.url %}
 
@@ -195,11 +197,8 @@
   </footer>
 
   <!-- Bootstrap core JavaScript -->
-
-
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
