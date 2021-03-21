@@ -61,13 +61,37 @@ teszt_art.add_to_submissions("shrekszilard", 3, "CSV importer robot", "localhost
 
 '''
 
+stop_watch(s)
+
 teszt_pol = Politician("karacsonygergely")
 if teszt_pol.existent:
 	print("ED:", teszt_pol.end_date)
-	print(teszt_pol.promise_categories)
 else:
 	print("Politician does not exist")
+'''
 
+
+for category in teszt_pol.promise_list.promise_categories:
+	print(">>>> ", category["name"])
+
+	for promise in category["promise_list"]:
+
+		if promise.status == "pending":
+
+			print(promise.id, promise.name, promise.status)
+			if len(promise.articles) > 0:
+				for art in promise.articles:
+					print ("|", art.title)
+					# print(art.__dict__)
+'''
+
+print("----\n",teszt_pol.promise_list.status_counters)
+
+stop_watch(e)
+
+
+
+'''
 
 teszt_pg = Page()
 teszt_pg.og_title = "testing OOP HTML generator - changed title"
@@ -78,3 +102,5 @@ teszt_pg.construct_html()
 with open ("teszt.html", "w") as htmlfile:
 	htmlfile.write(teszt_pg.html_page)
 
+
+'''

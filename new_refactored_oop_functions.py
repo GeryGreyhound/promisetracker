@@ -2,12 +2,13 @@
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfFileReader
 import psycopg2
+import psycopg2.extras
 from psycopg2.extensions import AsIs
 
 import datetime
 import requests
 
-class DatabaseOperations:
+class DatabaseConnection:
 
 	def __init__(self):
 		config_file = "database.conf"
@@ -18,20 +19,22 @@ class DatabaseOperations:
 		self.connection = psycopg2.connect(db_config)
 		self.connection.autocommit = True
 		self.cursor = self.connection.cursor()
+		self.dict_cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-dbc = DatabaseOperations()
+
 
 class Politician:
 	def __init__(self, id):
 		self.id = id
 		self.get_basic_data()
 		if self.existent:
-			self.get_promise_list()
+			self.promise_list = PromiseListType2(self.id)
 
 	def create_from_csv(self, csv_file):
 		pass
 
 	def get_basic_data(self):
+		dbc = DatabaseConnection()
 		query_string = "SELECT * FROM politicians WHERE id = (%s)"
 		query_data = [self.id]
 
@@ -58,11 +61,9 @@ class Politician:
 		else:
 			self.existent = False
 
+		# dbc.connection.close()
 
-	def get_promise_list(self):
-		pass
-		self.promise_list = PromiseList(self.id)
-		# ehelyett a class PromiseList leg7yen inkább egy kölön class, és legyen egy self.promise_list ojjektum
+		# [{"title" : "városszépítés", "promises" : [promise_obj, promise_obj, promise_obj], "cat_2": [promise_obj, ...]}
 
 	
 		'''for category in promise_categories:
@@ -80,71 +81,278 @@ class Politician:
 				dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id = (%s) ORDER BY article_date DESC", [self.id, promise_id])
 		'''
 
-class PromiseList:
-	def __init__(self, politician_id):
-		self.status_counters = {"promises" : 0, "success" : 0, "pending" : 0, "fail" : 0, "partly" : 0}
-		self.politician_id = politician_id
-		self.promise_list = list()
-
-	def get_from_database(self):
-		query_string = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
-		query_data = [self.politician_id]
-
-		dbc.cursor.execute(query_string, query_data)
-		self.promise_categories = dbc.cursor.fetchall()
-
-		for category in self.promise_categories:
-			category_details = dict()
-			category_id = category[1]
-			category_details["title"] = category[2]
-
-			promises_in_category = list()
-
-			promises_query = "SELECT * FROM promises WHERE politician_id = %s AND category_id = %s AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id",
-			query_data = politician, [AsIs(str(category_id))]
-			dbc.cursor.execute(promises_query, query_data)
-			category_promises = dbc.cursor.fetchall()
-
-			category_promises_list = list()
-
-			for promise in category_promises:
-				promise = Promise()
-				self.status_counter["promises"] += 1
-
-				promise.id = promise[0]
-				promise.articles = list()
-
-				query_string = "SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id =  (%s) ORDER BY article_date DESC"
-				query_data = [politician_id, promise_id]
-				dbc.cursor.execute(query_string, query_data)
-				self.raw_data = dbc.cursor.fetchall()
+		# dbc.connection.close()
 
 
+# refactor bookmark 2021 03 15
+
+
+
+class StopWatch:
+	def __init__(self):
+		pass
+
+	def set_start(self):
+		self.start_time = datetime.datetime.now()
+
+	def set_end(self):
+		self.end_time = datetime.datetime.now()
+		self.difference = self.end_time - self.start_time
+		print("STOPWATCH TIME: {} ms".format(str(self.difference.microseconds/1000)))
+
+sw = StopWatch()
+s = "start"
+e = "end"
+
+def stop_watch(mode):
+	if mode == "start":
+		sw.set_start()
+	else:
+		sw.set_end()
+
+# bárhol használható stopper, amivel könnyen lehet mérni funkciók végrehajtási idejét
+
+# stop_watch(s) - stopper indítása
+# stop_watch(e) - stopper leállítása és az eltelt idő kiírása milliseconsban		
 
 				
+class PromiseList:
+	def __init__(self, politician_id):
+		self.politician_id = politician_id
+		self.promises = list()
+		self.status_counters = {"promises" : 0, "none": 0, "success" : 0, "pending" : 0, "partly" : 0, "problem" : 0, "fail" : 0}
+
+		dbc = DatabaseConnection()
+
+		stop_watch(s)
+
+		categories_query = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
+		query_data = [self.politician_id]
+		dbc.dict_cursor.execute(categories_query, query_data)
+		promise_categories = dbc.dict_cursor.fetchall()
+
+		print("Cats", promise_categories[:2])
+
+		promises_query = "SELECT * FROM promises WHERE politician_id = (%s)" # AND category_id = (%s) AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id"
+		query_data = [self.politician_id]
+		dbc.dict_cursor.execute(promises_query, query_data)
+		promises = dbc.dict_cursor.fetchall()
+
+		print("Proms", promises[:2])
+
+		articles_query = "SELECT * FROM news_articles WHERE politician_id = (%s) ORDER BY article_date DESC"
+		query_data = [self.politician_id]
+		dbc.dict_cursor.execute(articles_query, query_data)
+		articles = dbc.dict_cursor.fetchall()
+
+		print("Arts", articles[:2])
+
+		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s)"
+		query_data = [self.politician_id]
+		dbc.dict_cursor.execute(subitems_query, query_data)
+		subitems = dbc.dict_cursor.fetchall()
+
+		dbc.connection.close()
+
+		for category in promise_categories:
+			
+			current_category = dict()
+			current_category["id"] = category[1]
+			current_category["title"] = category[2]
+			current_category["promises"] = list()
+
+			for promise in promises:
+
+				current_promise_custom_options = promise[4]
+				current_promise_id = promise[0]
+				current_promise_category_id = promise[2]
+
+				if current_promise_category_id == current_category["id"]:
+
+					current_promise = Promise(politician_id, current_promise_id)
+					current_promise.id = promise[0]
+					current_promise.name = promise[3]
+					current_promise.custom_options = promise[4]
+					current_promise.sub_items = list()
+					current_promise.articles = list()
+					current_promise.status = "none"
+
+					for subitem in subitems:
+						
+						current_subitem = dict()
+						current_subitem["parent_id"] = subitem[1]
+						
+						if current_subitem["parent_id"] == current_promise.id:
+
+							current_subitem["sub_id"] = subitem[2]
+							current_subitem["name"] = subitem[3]
+
+							current_promise.sub_items.append(current_subitem)
+
+					for counter, article in enumerate(articles):
+
+						article_promise_id = article[5]
+
+						if article_promise_id == current_promise.id:
+						
+							current_article = Article()
+							current_article.date = article[0]
+							current_article.url = article[1]
+							current_article.source_name = article[2]
+							current_article.title = article[3]
+							current_article.promise_id = article_promise_id
+							current_article.promise_status = article[6]
+
+							if counter == 0:
+								current_promise.status = current_article.promise_status
+
+							current_promise.articles.append(current_article)
+
+					current_category["promises"].append(current_promise)
+					self.status_counters["promises"] += 1
+					self.status_counters[current_promise.status] += 1
+
+		stop_watch(e)
 
 
+class PromiseListType2:
+	# valamiért még így is 2 másodperc ez a fos, valószínűleg a túl sok nested loop miatt
+	# átgondolandó: 13 kategória * 150 ígéret = 1950-szer megyünk végig az összes subitemen, majd 1950-szer megyünk végig mind a jelenleg 164 cikken, 
+	# ami azt jelenti, hogy 319 ezer alkalommal fut le a "if article_promise_id == current_promise.id:" rész
+	# nem lenne egyszerűbb ezt egyszer megcsinálni, aztán az Article objektumot a listába szúrni? 
+
+	#1: létrehozzuk a kategóriák listáját, minden kategórián belül van egy promise_list lista, azon belül vannak a promise objectek, ezekbe szúrjuk az Article obbjecteket, nem kell mindig DB queryzni
+
+	def __init__(self, politician_id):
+		self.politician_id = politician_id
+		self.promises = list()
+		self.promise_categories = list()
+		self.status_counters = {"promises" : 0, "none": 0, "success" : 0, "pending" : 0, "partly" : 0, "problem" : 0, "fail" : 0}
+		self.loop_counter_test = 0
+
+		dbc = DatabaseConnection()
+
+		categories_query = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
+		query_data = [self.politician_id]
+		dbc.cursor.execute(categories_query, query_data)
+		promise_categories = dbc.cursor.fetchall()
+
+		promises_query = "SELECT * FROM promises WHERE politician_id = (%s) ORDER BY id" # AND category_id = (%s) AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id"
+		query_data = [self.politician_id]
+		dbc.cursor.execute(promises_query, query_data)
+		promises = dbc.cursor.fetchall()
+
+		articles_query = "SELECT * FROM news_articles WHERE politician_id = (%s) ORDER BY article_date DESC"
+		query_data = [self.politician_id]
+		dbc.cursor.execute(articles_query, query_data)
+		articles = dbc.cursor.fetchall()
+
+		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s)"
+		query_data = [self.politician_id]
+		dbc.cursor.execute(subitems_query, query_data)
+		subitems = dbc.cursor.fetchall()
+
+		dbc.connection.close()
+
+		for category in promise_categories:
+			current_category = dict()
+			current_category["category_id"] = category[1]
+			current_category["name"] = category[2]
+			current_category["promise_list"] = list()
+			self.promise_categories.append(current_category)
+
+		for promise in promises:
+			current_promise = Promise(politician_id = self.politician_id, promise_id = promise[0])
+			current_promise.category_id = promise[2]
+			current_promise.name = promise[3]
+			current_promise.custom_options = promise[4]
+			if not current_promise.custom_options:
+				current_promise.custom_options = list()
+			current_promise.sub_items = list()
+			current_promise.articles = list()
+			current_promise.status = "none"
+
+			self.promises.append(current_promise)
+
+		for article in articles:
+		
+			current_article = Article()
+			current_article.date = article[0]
+			current_article.url = article[1]
+			current_article.source_name = article[2]
+			current_article.title = article[3]
+			current_article.promise_id = article[5]
+			current_article.promise_status = article[6]
+
+			promise_position_in_list = current_article.promise_id - 1
+
+			if current_article.promise_id != 0:
+				self.promises[promise_position_in_list].articles.append(current_article)
+
+		for promise in self.promises:
+			if not "draft" in promise.custom_options:
+				category_position_in_list = promise.category_id - 1
+
+				if len(promise.articles) > 0:
+					promise.status = promise.articles[0].promise_status
+
+				self.status_counters[promise.status] += 1
+				self.status_counters["promises"] += 1
+				self.promise_categories[category_position_in_list]["promise_list"].append(promise)
 
 
 class Promise:
-	def __init__(self):
-		# self.articles legyen az ígérethez kapcsolódó cikkek
-		# mindegyik cikk is egy Article objektum, az Article class-ban lesz definiálva a létrejövése adatbázisból (Article.get_from_databased)
-		pass
+	def __init__(self, politician_id, promise_id):
+		self.politician_id = politician_id
+		self.id = promise_id
+		self.status = "none"
+
+
+	def get_articles(self):
+
+		dbc = DatabaseConnection()
+		self.articles = list()
+
+		query_string = "SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id =  (%s) ORDER BY article_date DESC"
+		query_data = [self.politician_id, self.id]
+		
+		dbc.cursor.execute(query_string, query_data)
+		raw_data = dbc.cursor.fetchall()
+
+		for article in raw_data:
+			current_article = Article()
+
+			'''
+
+			enne így nincs sok értelme, talán úgy lenne, ha a fenti queryben csak alap adatokat kapnánk (pl url) a többit meg mondjuk az Article.get_from_database() tenné hozzá.
+			Hagyjuk nyitva ennek a lehetőségét, de egyelőre overkillnek tűnik, maradjon csak az Article csak azért class, hogy beledobáljuk a queryből kapott variableokat,
+			majd talán a githubon valami nálam okosabb mond valami jobb megoldást, egyelőre a működik -> jóvanazúgy irányelv legyen érvényben
+
+			current_article.date = article[0]
+			current_article.url = article[1]
+			current_article.source_name = article[2]
+			current_article.title = article[3]
+			current_article.politician_id = article[4] # ennek végképp semmi értelme így, átgondolandó hogy miért nem = self.politician_id, hiszen tudjuk
+			current_article.promise_id = article[5] # ugyanez, de fasz kivan, M&JVAU
+			current_article.promise_status = article[6]
+
+			self.articles.append(current_article)
+
+		'''
+
+		dbc.connection.close()
+
+
+class Article:
+	def __init__(self, url = None):
+		
+		self.url = url
+		self.errors = list()
 
 	def get_from_database(self, policitian_id, promise_id):
 		pass
 
-	def get_articles(self):
-		pass
-
-class Article:
-	def __init__(self, url):
-		print(url)
-		self.url = url
-		self.errors = list()
-
-	def get_meta_data(self):
+	def get_meta_data(self): # from web when submitted
 
 		if ".pdf" in self.url:
 			r = requests.get(self.url)
@@ -274,8 +482,7 @@ class Article:
 		pass
 
 	def add_to_submissions(self, politician_id, promise_id, submitter_name, submitter_ip, submit_date, suggested_status):
-
-		dbc = DatabaseOperations()
+		dbc = DatabaseConnection()
 		
 		checkable_variables = [self.title, self.source_name, self.date]
 
@@ -292,6 +499,7 @@ class Article:
 
 		dbc.cursor.execute(query_string, query_data)
 
+		# dbc.connection.close()
 
 class Page:
 	def __init__(self):

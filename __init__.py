@@ -20,9 +20,6 @@ sys.path.insert(0, os.getcwd())
 from common_functions import send_email
 import new_refactored_oop_functions as promisetracker_v2
 
-elsosori_valtozo = promisetracker_v2.Politician("karacsonygergely")
-print("Vau!")
-
 promise_statuses = {"none" : "meghirdetve", "pending" : "folyamatban", "partly" : "részben", "success" : "sikeres", "problem" : "problémás", "failed" : "meghiúsult"}
 
 MAIN_SETTINGS = dict()
@@ -43,11 +40,6 @@ class DatabaseOperations:
 		self.connection.autocommit = True
 		self.cursor = self.connection.cursor()
 
-
-
-	def new_record(self, table, record):
-		insert_command = "INSERT INTO " + table + " VALUES ('" + record + "')"
-		self.cursor.execute(insert_command)
 
 def get_politician_data(politician):
 	dbc = DatabaseOperations()
@@ -654,6 +646,9 @@ class r_error:
 @app.route("/<politician>", methods = ["POST", "GET"])
 def igeretfigyelo_page(politician):
 
+	benchmark_start_time = datetime.datetime.now()
+	print("V1 benchmark: request received", datetime.datetime.now())
+
 	if session["version"] == "2":
 		pass
 	else:
@@ -775,8 +770,9 @@ def igeretfigyelo_page(politician):
 	except:
 		return "error.html helye, hiba: nincs az adatbázisban ilyen"
 
+	
 	else:
-
+		print("V1 benchmark: getting news articles", datetime.datetime.now())
 		dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = '" + politician + "' ORDER BY article_date DESC LIMIT 10")
 		latest_news = dbc.cursor.fetchall()
 		latest_news_formatted = list()
@@ -887,6 +883,7 @@ def igeretfigyelo_page(politician):
 
 			promises_list.append(category_details)
 
+		print("V1 benchmark: setting settables", datetime.datetime.now())
 		start_date = selected_politician[6]
 		end_date = datetime.datetime(2024,10,1)
 		today_date = datetime.datetime.now()
@@ -921,6 +918,8 @@ def igeretfigyelo_page(politician):
 					   "sidebar" : {"title" : selected_politician[1] + " névjegye", "content": {"newsfeed" : latest_news_formatted}},
 					   "status_message" : status_message}
 
+		print("V1 benchmark: returning html template", datetime.datetime.now())
+		print("V1 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
 		return render_template("igeretfigyelo.html", selected_promise_id = selected_promise_id, static_content = "static content", page_properties = page_properties, permalink = politician)
 
 

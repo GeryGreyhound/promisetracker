@@ -1,6 +1,7 @@
 /access_log.csv
 /database.conf
 /email.conf
+/simplified_db_test.py
 /testing.py
 /oopteszt.py
 /mod_cloudflare/
