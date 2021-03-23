@@ -1,4 +1,7 @@
 from new_refactored_oop_functions import *
+import kemocloud_page_builder_v2 as kpb
+
+from flask import Markup
 
 import csv
 
@@ -61,6 +64,12 @@ teszt_art.add_to_submissions("shrekszilard", 3, "CSV importer robot", "localhost
 
 '''
 
+
+
+
+
+''' EZ JÓ és KELL
+
 stop_watch(s)
 
 teszt_pol = Politician("karacsonygergely")
@@ -68,7 +77,18 @@ if teszt_pol.existent:
 	print("ED:", teszt_pol.end_date)
 else:
 	print("Politician does not exist")
+
+
+print("----\n",teszt_pol.promise_list.status_counters)
+
+stop_watch(e)
+
+
+''' # EDDIG
+
 '''
+
+
 
 
 for category in teszt_pol.promise_list.promise_categories:
@@ -84,13 +104,26 @@ for category in teszt_pol.promise_list.promise_categories:
 					print ("|", art.title)
 					# print(art.__dict__)
 '''
+stop_watch(s)
+teszt_page = kpb.Page()
+teszt_page.page_title = "Adding parameters from backend"
 
-print("----\n",teszt_pol.promise_list.status_counters)
+teszt_page.navbar_items = [
+		{"type" : "link", "target" : "demo_target", "title" : "Updated Demo link 1"},
+		{"type" : "link", "target" : "demo_target_2", "title" : "Updated Demo link 2"},
+		{"type" : "dropdown", "title" : "Updated Demo dropdown", "items" : [{"target" : "dd_1", "title" : "Dropdown demo 1"}, {"target" : "dd_2", "title" : "Dropdown demo 2"}]}
+	]
+	
+teszt_page.assemble_html_parts()
 
 stop_watch(e)
+stop_watch(s)
+
+with open("page_builder_test.html", "w") as f:
+	f.write(teszt_page.final_html)
 
 
-
+stop_watch(e)
 '''
 
 teszt_pg = Page()

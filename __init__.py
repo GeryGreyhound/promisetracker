@@ -19,6 +19,7 @@ sys.path.insert(0, os.getcwd())
 
 from common_functions import send_email
 import new_refactored_oop_functions as promisetracker_v2
+import kemocloud_page_builder_v2
 
 promise_statuses = {"none" : "meghirdetve", "pending" : "folyamatban", "partly" : "részben", "success" : "sikeres", "problem" : "problémás", "failed" : "meghiúsult"}
 
@@ -146,6 +147,11 @@ def fetch_article_data(article_url, soup):
 
 
 
+v2_page = kemocloud_page_builder_v2.Page()
+
+
+
+
 
 @app.before_request
 def before_request_func():
@@ -154,6 +160,8 @@ def before_request_func():
 		session["version"] = request.args.get("v")
 		if not session["version"]:
 			session["version"] = "1"
+		
+
 
 	headers_list = request.headers.getlist("X-Forwarded-For")
 	user_ip = headers_list[0] if headers_list else request.remote_addr
@@ -650,7 +658,9 @@ def igeretfigyelo_page(politician):
 	print("V1 benchmark: request received", datetime.datetime.now())
 
 	if session["version"] == "2":
-		pass
+		v2_page.title = "Ígéretfigyelő 2.0 teszt templating nélkül"
+		v2_page.assemble_html_parts()
+		return Markup(v2_page.final_html)
 	else:
 		pass
 

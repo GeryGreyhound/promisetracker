@@ -8,6 +8,8 @@ from psycopg2.extensions import AsIs
 import datetime
 import requests
 
+import v2_html_elements
+
 class DatabaseConnection:
 
 	def __init__(self):
@@ -290,6 +292,7 @@ class PromiseListType2:
 				self.promises[promise_position_in_list].articles.append(current_article)
 
 		for promise in self.promises:
+
 			if not "draft" in promise.custom_options:
 				category_position_in_list = promise.category_id - 1
 
@@ -299,6 +302,24 @@ class PromiseListType2:
 				self.status_counters[promise.status] += 1
 				self.status_counters["promises"] += 1
 				self.promise_categories[category_position_in_list]["promise_list"].append(promise)
+
+				# promise.generate_html()     ### - html-t kategóriánként csináljuk inkább egy.egy category container DIV-be téve
+				# amiben később kategória-statisztikák is lehetnek
+
+		self.generate_html()
+
+	def generate_html(self):
+		for promise_category in self.promise_categories:
+			print("-------\n > > >", str(promise_category)[:50])
+
+			for promise in promise_category["promise_list"]:
+				print("|", str(promise.__dict__)[:50]) 
+
+				if len(promise.articles) > 0:
+
+					for article in promise.articles:
+						print("|||", str(article.__dict__)[:50]) 
+
 
 
 class Promise:
@@ -341,6 +362,10 @@ class Promise:
 		'''
 
 		dbc.connection.close()
+
+	def generate_html(self):
+		html_base = v2_html_elements.HtmlElements()
+		self.html = html_base.testing_variable_insertions.format(**self.__dict__)
 
 
 class Article:

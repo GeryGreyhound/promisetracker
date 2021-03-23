@@ -1,25 +1,51 @@
+'''
+
 class Promise:
 	def __init__(self):
-		pass
+		self.title = "Árvíztűrő tükörfúrógép"
+		self.politician_name = "karacsonygergely"
+		self.date = "2021-01-25"
+		self.whatever = "anything"
+		self.test_bool = True
+		self.number = 10
 
 	def generate_html(self):
 
+		print(self.__dict__)
+
 		html_base = HtmlElements()
-		self.html_box = f(str(html_base.promise_list_item))
+		self.html_box = html_base.testing_variable_insertions.format(**self.__dict__)
+
+'''
 
 
 class HtmlElements:
 
+	css = '''
+	<style>
+	.promise_list_item_title {
+		cursor: pointer;
+		position: relative;
+		display: table;
+	}
+	
+	.promise_list_item_news_badge {display:table-cell}
+	"promise_list_item_status" : "display:table-cell"
+	"promise_list_item_details" : "display: none;"
+	"promise_list_item_"
+
+	'''
+
 	promise_list_item = '''
-	<div id="{promise.id}_title" onclick="show_details({promise.id})" style="cursor: pointer; position: relative; display: table;">
+	<div class="promise_list_item_title" id="{id}_title" onclick="show_details({id})">
 		<div style="display:table-cell"><span class="badge badge-light"><img alt="3 kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>3</b></span></div>
 	
 		<div style="display:table-cell"><span class="badge badge-warning">&nbsp;2&nbsp;</span></div><span style="position: relative; left: 10px; display:table-cell;">Tiborcz-adó</span><br></div>
 
-		<div id="2_details" style="display: none;">
+		<div class = "promise_list_item_details" id="{id}_details" style="display: none;">
 	    	<div class="card">
 	    		<div class="card-header" onclick="show_details(2)">
-	    		<h4><span class="badge badge-warning">2 | problémás</span>Tiborcz-adó</h4>
+	    		<h4><span class="badge badge-warning">2 | problémás</span>Tiborcz-adó</h4> # átgonodolós
 			</div>
 			
 			<ul class="list-group list-group-flush">
@@ -42,15 +68,14 @@ class HtmlElements:
 
 	'''
 
+	testing_variable_insertions = '''
+	Promise name: {name}, politician_name: {politician_id}
+	'''
 
 
 
-teszt_p = Promise()
-teszt_p.id = 6
 
-teszt_p.generate_html()
 
-print(teszt_p.html_box)
 
 
 
