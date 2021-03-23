@@ -24,7 +24,14 @@ DEFAULT_VALUES = {
 		{"type" : "link", "target" : "demo_target", "title" : "Demo link 1"},
 		{"type" : "link", "target" : "demo_target_2", "title" : "Demo link 2"},
 		{"type" : "dropdown", "title" : "Demo dropdown", "items" : [{"target" : "dd_1", "title" : "Dropdown demo 1"}, {"target" : "dd_2", "title" : "Dropdown demo 2"}]}
-	]
+					],
+	"sidebar_widgets" : [{"title" : "Demo widget 1", "content" : "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. <a href=https://www.lipsum.com/>read more</a>"},
+						 {"title" : "Demo widget 2", "content" : "Widget 2 contents"}
+						 ],
+
+	"featured_banner" : '<p>Featured banner placeholder</p>',
+	"footer_text" : 'PromiseTracker V2.21a 2019-2021 &copy Tomanovics Gergely @ Kreatív Ellenállás Mozgalom<br>Made with KEMOCloud Page Builder 2021<br>Except where otherwise noted, this website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US">Creative Commons Attribution 3.0 Unported License</a>.'
+
 	}
 
 # legyen egy page_specific_values global is
@@ -49,17 +56,31 @@ class Page:
 		self.body_end_imports = DEFAULT_VALUES["body_end_imports"]
 		self.custom_css = DEFAULT_VALUES["custom_css"] # ez kivételesen nem list, hanem string, ehhez += operátorral kell hozzáadni, ha hozzá kell bármit
 		self.navbar_items = DEFAULT_VALUES["navbar_items"]
-		self.google_analytics_id = 'TESTING-0000'
-		self.body_variable_1 = "Fekete bikapata" # itt jön majd létre maga az oldal
+		self.sidebar_widgets = DEFAULT_VALUES["sidebar_widgets"]
+		self.google_analytics_id = 'UA-85693466-4'
 		self.og_properties = "OG1\nOG2\nOG3"
+		self.content_layout = "right_sidebar"
+		self.featured_banner = DEFAULT_VALUES["featured_banner"]
+		self.footer_text = DEFAULT_VALUES["footer_text"]
+
+		self.main_content = '<h1>Árvíztűrő tükörfúrógép</h1><hr><p class="lead">Lorem Ipsum ecet retek</p>'
 
 	def assemble_html_parts(self):
 
+		# ami listából áll, azt muszáj így létrehozni
+
 		self.generate_navbar(self.navbar_items)  # vagyis generate_navbar(items)? Meglátjuk, ez hogy jó
+		self.generate_sidebar(self.sidebar_widgets)
+		# self.generate_page_body(self.innen_nem tudom fáradt vagyok de gecire)  - ez lehet h nem is kell, csak a content_layout
+		# sidebar widgetekig elvileg OK a dolog
 
 		# self generate_html oszt belehajígálni az alábbiakat? 
 
-		self.page_body = HtmlElements.page_body.format(**self.__dict__)
+		self.content = HtmlElements.content_layouts[self.content_layout].format(main_content = self.main_content, sidebar = self.sidebar)
+		self.footer = HtmlElements.footer.format(footer_text = self.footer_text)
+
+		# self.page_body = HtmlElements.page_body.format(**self.__dict__)
+		
 		self.google_analytics_script = HtmlElements.google_analytics_script.format(**self.__dict__)
 		
 		self.final_html = HtmlElements.page_basics.format(**self.__dict__)
@@ -83,6 +104,18 @@ class Page:
 
 		self.navbar = HtmlElements.navbar_base.format(page_title = self.page_title, navbar_items = navbar_items_html)
 
+	def generate_sidebar(self, items):
+		self.sidebar = ""
+
+		for item in items:
+			print(item)
+			item_html = HtmlElements.sidebar_widget.format(widget_title = item["title"], widget_content = item["content"])
+			self.sidebar += item_html
+
+
+
+		
+
 
 
 class HtmlElements:
@@ -100,23 +133,34 @@ class HtmlElements:
 	
 	<body>
 
-	{page_body}
+	<div class="container">
+
+	{navbar}
+	{featured_banner}
+	{content}
+	{footer}
 	{body_end_imports}
+
+	</div>
 	
 	</body>
 	</html>
 	'''
 
-	test_html_element_1 = '''
-	<div class={test_variable}><p>fdsfsd</p></div>
-	'''
 
-	page_body = '''
-	<div class="container">
-	{navbar}
-	<div>Árvíztűrő tükörfúrógép</div>
-	<div>{body_variable_1}</div>
-	'''
+	content_layouts = {"full_width" : "",
+					   "right_sidebar" : '''
+										<div class="row">
+										<div class="col-md-8">
+										{main_content}
+										</div>
+
+										<div class="col-md-4">
+										{sidebar}
+										</div>
+										</div>
+										'''
+										}
 
 	google_analytics_script = '''
 	<script async src="https://www.googletagmanager.com/gtag/js?id={google_analytics_id}"></script>
@@ -163,11 +207,28 @@ class HtmlElements:
         {dropdown_items}
         </div>
       	</li>
-
 	'''
 
 	navbar_dropdown_item = '''
 	<a class="dropdown-item" href="{link_target}">{link_title}</a>\n
+	'''
+
+	sidebar_widget = '''
+	<div class = "card">
+	<h5 class = card-header>{widget_title}</h5>
+    <div class="card-body">
+    <p>{widget_content}</p>
+    </div>
+    </div>
+
+	'''
+
+	footer = '''
+	<footer class="py-5 bg-dark">
+    <div class="container">
+    <p class="m-0 text-center text-white">{footer_text}</a></p>
+    </div>
+  	</footer>
 	'''
 
 
