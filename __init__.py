@@ -743,6 +743,44 @@ def create_template(): #(page_permalink, hogy statik oldal kell vagy politikusos
 
 	return v2_template
 
+def create_politician_html(politician):
+	selected_politician = promisetracker_v2.Politician(politician)
+
+	pol_html = "<h2>selected_politician</h2>"
+	for k, v in selected_politician.__dict__.items():
+		pol_html += "{} | {}<hr>\n".format(str(k), str(v))
+
+	pol_html += "<h2>promise_list</h2>"
+
+	for category in selected_politician.promise_list.promise_categories:
+		pol_html += "<h4>category: {}</h4><br>".format(category["name"])
+		pol_html += "{}<br>\n".format(str(category))
+
+
+		for promise in category["promise_list"]:
+
+			pol_html += "promise_item<br>"
+			
+			for item in promise.__dict__.items():
+				pol_html += "{}<br>\n".format(str(item))
+
+			pol_html += "<br><br>"
+
+
+
+		pol_html += "<hr>"
+
+
+
+	return pol_html
+
+
+	# innen folyt, ezt valahogy a pagebuilderben kéne, vagy az addonban, vagy FASZ TUDJA HOL de valahol
+
+	# mi lenne, ha már a Politician object tartalmazná a kész HTML-t? Talán az a legegyszerűbb
+	# oszt itt a create_politician_html helyett egy selected_politician.html van csak OSZT CSŐ
+	# ez a legjobb ötlet!
+
 
 
 
@@ -773,17 +811,28 @@ def igeretfigyelo_page(permalink):
 		for politician in politicians:
 			dropdown_item = {"target" : politician[1], "title" : "{} ({})".format(politician[0], politician[2])}
 			politicians_navbar_dropdown.append(dropdown_item)
+			if politician[1] == permalink:
+				# check if we need a politician page
+				
+				v2_page.main_content = create_politician_html(politician[1])
 
 		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 
 		
-		promise_count_string = SITE_CONFIG["STRINGS"]["promise_list"]["title_string"][session["language"]].format(politician_name = "Karácsony Gergely", promise_count = 150, success_count = 20, partly_count = 10, progress_count = 50)
+		
+		# generate specific pages
 
-		v2_page.assemble_html_parts()
+
+
+
+
 
 		benchmark_end_time = datetime.datetime.now()
-		print("V2 benchmark: returning template: {}".format(session["version"], datetime.datetime.now()))
-		print("V2 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
+		print("V2 benchmark: assembling template: {}".format(datetime.datetime.now()))
 		
+
+		v2_page.assemble_html_parts()
+		print("V2 benchmark: returning Markup: {}".format(datetime.datetime.now()))
+		print("V2 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
 		return Markup(v2_page.final_html)
 	
 
