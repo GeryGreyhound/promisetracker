@@ -1,7 +1,9 @@
+import csv
 import json
 import lxml
 import smtplib
 import requests
+import time
 
 from bs4 import BeautifulSoup
 
@@ -87,3 +89,51 @@ class ScrapeEasy:
 			except:
 				print("Fail:", mt)
 				self.meta_dict[mt.get("name")] = {"property" : mt.get("property"), "content" : mt.get("content")}
+
+
+class StopWatch:
+	def __init__(self, command = None, name = None):
+		self.name = name
+		if not command:
+			self.start()
+		elif command == "stop":
+			self.stop()
+
+	def start(self):
+		self.start_time = datetime.datetime.now()
+
+	def stop(self):
+		self.end_time = datetime.datetime.now()
+		self.difference = self.end_time - self.start_time
+
+		stopwatch_string = "> STOPWATCH | Name: {}, TIME: {} | start: {}, end: {}".format(self.name, str(self.difference), self.start_time, self.end_time) 
+		print(stopwatch_string)
+
+
+def csv_to_dict(csv_file):
+	final_dict = dict()
+
+
+	with open (csv_file, "r") as f:
+		reader = csv.reader(f)
+		rows = list(reader)
+	
+	for counter, row in enumerate(rows):
+
+		if counter == 0:
+
+			grouping = row[0]
+			item_id = row[1]
+
+			group_inner_1 = row[2]
+			group_inner_2 = row[3]
+			# innentől akárhány nyelv felvihető
+
+		else:
+			string_id = row[1]
+			if row[0] != '':
+				category = row[0]
+				final_dict[category] = dict()	
+			final_dict[category][string_id] = {group_inner_1 : row[2], group_inner_2 : row[3]}
+
+	return final_dict

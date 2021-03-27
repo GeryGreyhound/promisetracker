@@ -14,10 +14,20 @@ import smtplib
 import socket
 import time
 
+cw = os.getcwd()
+print("CW1: ", cw)
+
+
+
 os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
 sys.path.insert(0, os.getcwd())
 
-from common_functions import send_email
+cw = os.getcwd()
+print("CW2: ", cw)
+
+from promisetracker_v2 import *
+
+from common_functions import send_email, StopWatch, csv_to_dict
 import new_refactored_oop_functions as promisetracker_v2
 import kemocloud_page_builder_v2
 
@@ -147,7 +157,7 @@ def fetch_article_data(article_url, soup):
 
 
 
-v2_page = kemocloud_page_builder_v2.Page()
+
 
 
 
@@ -155,11 +165,17 @@ v2_page = kemocloud_page_builder_v2.Page()
 
 @app.before_request
 def before_request_func():
-	
+
+
 	if not "version" in session or "v" in request.args:
 		session["version"] = request.args.get("v")
 		if not session["version"]:
 			session["version"] = "1"
+	
+	if not "language" in session or "lang" in request.args:
+		session["language"] = request.args.get("lang")
+		if not session["language"]:
+			session["language"] = "hu"
 		
 
 
@@ -195,6 +211,13 @@ def before_request_func():
 			
 @app.route("/", methods = ["POST", "GET"])
 def main_page():
+	if "lang" in request.args:
+		referrer = request.headers.get("Referer")
+		session["language"] = request.args.get("lang")
+		if referrer:
+			return redirect(referrer)
+		else:
+			return redirect("/")
 	return redirect("/about")
 
 @app.route("/about")
@@ -204,6 +227,7 @@ def about_page():
 	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
 
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
+
 
 @app.route("/contact", methods = ["POST", "GET"])
 def contact_page():
@@ -651,18 +675,136 @@ class r_error:
 	def __init__(self):
 		pass
 
-@app.route("/<politician>", methods = ["POST", "GET"])
-def igeretfigyelo_page(politician):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # # # # innen a V2 teljes refactor # # # # #
+import csv
+import json
+
+
+SITE_CONFIG = {
+	"STRINGS" : csv_to_dict("config/strings.csv")
+}
+
+SITE_CONFIG["STRINGS"]["page_title"] = {"hu" : "Ígéretfigyelő", "en": "Promisetracker"}
+SITE_CONFIG["STATIC_PAGES"] = ["about", "contact", "donate"]
+SITE_CONFIG["NAVBAR_ITEMS"] = [] # jobban nézne itt ki, de kellenek session variable-ből generált elemek, úgyhogy muszáj rútul külön a route-ba tenni :(
+
+
+class DatabaseConnection:
+
+	def __init__(self):
+		config_file = "database.conf"
+
+		with open(config_file) as config:
+			db_config = config.read()
+			
+		self.connection = psycopg2.connect(db_config)
+		self.connection.autocommit = True
+		self.cursor = self.connection.cursor()
+
+
+def get_politicians_list(): # itt lehetnek majd country=hu, aktív = True, adminnak az inaktívak is látszódhatnak, stb
+	politicians_query = '''
+		SELECT name, id, location FROM politicians
+		JOIN politician_meta on politicians.id = politician_meta.politician_id
+		WHERE meta_parameter = 'active' AND meta_value = 'true'
+		ORDER BY name
+		'''
+
+	dbc = DatabaseConnection()
+	dbc.cursor.execute(politicians_query)
+	politicians = dbc.cursor.fetchall()
+	dbc.connection.close()
+
+	return politicians
+
+
+def create_template(): #(page_permalink, hogy statik oldal kell vagy politikusos, dőljön itt el automatikusan):
+	v2_template = kemocloud_page_builder_v2.Page()
+
+	v2_template.page_title = SITE_CONFIG["STRINGS"]["page_title"][session["language"]]
+	v2_template.page_language = session["language"]
+
+	return v2_template
+
+
+
+
+
+
+@app.route("/<permalink>", methods = ["POST", "GET"])
+def igeretfigyelo_page(permalink):
 
 	benchmark_start_time = datetime.datetime.now()
-	print("V1 benchmark: request received", datetime.datetime.now())
+	print("V{} benchmark: request received: {}".format(session["version"], datetime.datetime.now()))
 
 	if session["version"] == "2":
-		v2_page.title = "Ígéretfigyelő 2.0 teszt templating nélkül"
+
+		v2_page = create_template()
+
+		politicians = get_politicians_list()
+
+		politicians_navbar_dropdown = list()
+
+		SITE_CONFIG["NAVBAR_ITEMS"] = [ # itt kell egyelőre lennie, mert különben nem kap politicians_navbar_dropdown-t!!
+		{"type" : "link", "target" : "/about", "title" : SITE_CONFIG["STRINGS"]["navbar"]["about"][session["language"]]},
+		{"type" : "dropdown", "title" : SITE_CONFIG["STRINGS"]["navbar"]["politicians"][session["language"]], "items" : politicians_navbar_dropdown},
+		{"type" : "link", "target" : "/contact", "title" : SITE_CONFIG["STRINGS"]["navbar"]["contact"][session["language"]]},
+		{"type" : "link", "target" : "/donate", "title" : SITE_CONFIG["STRINGS"]["navbar"]["donate"][session["language"]]},
+		{"type" : "language_switch", "items" : ["hu", "en"]}
+		]
+
+		for politician in politicians:
+			dropdown_item = {"target" : politician[1], "title" : "{} ({})".format(politician[0], politician[2])}
+			politicians_navbar_dropdown.append(dropdown_item)
+
+		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 
+		
+		promise_count_string = SITE_CONFIG["STRINGS"]["promise_list"]["title_string"][session["language"]].format(politician_name = "Karácsony Gergely", promise_count = 150, success_count = 20, partly_count = 10, progress_count = 50)
+
 		v2_page.assemble_html_parts()
+
+		benchmark_end_time = datetime.datetime.now()
+		print("V2 benchmark: returning template: {}".format(session["version"], datetime.datetime.now()))
+		print("V2 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
+		
 		return Markup(v2_page.final_html)
+	
+
+
+
+
+
+
+
+
+
+		# # # # # Eddig a V2 kész # # # # #
+
+
+
+
+
+
+
 	else:
-		pass
+		politician = permalink
 
 	# politician = request.args.get("politician_name")
 	selected_promise_id = request.args.get("promise_id")

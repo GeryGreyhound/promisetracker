@@ -1,4 +1,4 @@
-from new_refactored_oop_functions import *
+import igeretfigyelo_v2
 import kemocloud_page_builder_v2 as kpb
 
 from flask import Markup
@@ -68,7 +68,7 @@ teszt_art.add_to_submissions("shrekszilard", 3, "CSV importer robot", "localhost
 
 
 
-''' EZ JÓ és KELL
+''' ez jó és kell
 
 stop_watch(s)
 

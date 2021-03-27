@@ -1,23 +1,45 @@
 DEFAULT_VALUES = {
 	"page_title" : "KEMOCloud Pagebuilder v2.0 demo",
 	"page_language" : "hu",
-	"head_imports" : 
-		['<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">',
-		 '<link href="/static/css/blog-home.css" rel="stylesheet">'
-		],
-	"body_end_imports" : 
-		['<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>',
-		 '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>',
-		 '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>'
-		 ],
+	"head_imports" : ''' 
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+		<link href="/static/css/blog-home.css" rel="stylesheet">
+		''',
+	"body_end_imports" : '''
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		''',
 	"custom_css" : '''
-	<style>
-	.promise_list_item_title {
-	cursor: pointer;
-	position: relative;
-	display: table;
+
+	.sidebar_widget {
+	margin-bottom: 15px;	
 	}
-	</style>
+
+	.top_banner {
+	background-color: #eeeeee;
+	font-size: 30px;
+	font-weight: 100;
+	text-align: center;
+	padding: 15px;
+	margin-bottom: 15px;
+	}
+
+	.menu-dropdown-language-selector {
+	width: 24px;
+	height: auto;
+	}
+
+	.navbar-logo {
+	width:40px;
+	height: auto;
+	}
+
+	.navbar-page-name {
+	font-size: 32px;
+	font-weight: 100;
+	}
+
 	'''
 	,
 	"navbar_items" : [
@@ -29,7 +51,8 @@ DEFAULT_VALUES = {
 						 {"title" : "Demo widget 2", "content" : "Widget 2 contents"}
 						 ],
 
-	"featured_banner" : '<p>Featured banner placeholder</p>',
+
+	"top_banner" : '<div class="top_banner"><p>Top banner placeholder</p></div>',
 	"footer_text" : 'PromiseTracker V2.21a 2019-2021 &copy Tomanovics Gergely @ Kreatív Ellenállás Mozgalom<br>Made with KEMOCloud Page Builder 2021<br>Except where otherwise noted, this website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US">Creative Commons Attribution 3.0 Unported License</a>.'
 
 	}
@@ -39,11 +62,14 @@ DEFAULT_VALUES = {
 # pl if "page_title" in "PAGE_SPECIFIC_VALUES" -> DEFAULT_VALUES["page_title"] = PAGE_SPECIFIC_VALUES["page_title"]
 # persze iterálva for looppal:
 
+
+'''
+ezeket inkább a routesben adjuk meg, itt fölösleges
 PAGE_SPECIFIC_VALUES = {
 	"page_title" : "Ígéretfigyelő",
 	"x" : "y"
 	}
-
+'''
 
 
 class Page:
@@ -58,9 +84,9 @@ class Page:
 		self.navbar_items = DEFAULT_VALUES["navbar_items"]
 		self.sidebar_widgets = DEFAULT_VALUES["sidebar_widgets"]
 		self.google_analytics_id = 'UA-85693466-4'
-		self.og_properties = "OG1\nOG2\nOG3"
+		self.meta_values = ""
 		self.content_layout = "right_sidebar"
-		self.featured_banner = DEFAULT_VALUES["featured_banner"]
+		self.top_banner = DEFAULT_VALUES["top_banner"]
 		self.footer_text = DEFAULT_VALUES["footer_text"]
 
 		self.main_content = '<h1>Árvíztűrő tükörfúrógép</h1><hr><p class="lead">Lorem Ipsum ecet retek</p>'
@@ -85,12 +111,14 @@ class Page:
 		
 		self.final_html = HtmlElements.page_basics.format(**self.__dict__)
 
-	def generate_navbar(self, items):
+	def generate_navbar(self, items, split = True):
 		navbar_items_html = ""
+		navbar_items_split_part = ""
 		
 		for item in items:
 			if item["type"] == "link":
 				item_html = HtmlElements.navbar_link.format(link_target = item["target"], link_title = item["title"])
+				split_position = "left"
 
 			elif item["type"] == "dropdown":
 				sub_items_html = ""
@@ -99,19 +127,36 @@ class Page:
 					sub_items_html += HtmlElements.navbar_dropdown_item.format(link_target = dropdown_item["target"], link_title = dropdown_item["title"])
 
 				item_html = HtmlElements.navbar_dropdown.format(dropdown_title = item["title"], dropdown_items = sub_items_html)
+				split_position = "left"
 
-			navbar_items_html += item_html + "\n"
+			elif item["type"] == "language_switch":
+				sub_items_html = ""
 
-		self.navbar = HtmlElements.navbar_base.format(page_title = self.page_title, navbar_items = navbar_items_html)
+				for dropdown_item in item["items"]:
+					if dropdown_item != self.page_language:
+						sub_items_html += HtmlElements.navbar_dropdown_item.format(link_target = "/?lang={}".format(dropdown_item), link_title = '<img class="menu-dropdown-language-selector" src="/static/images/{}.png">'.format(dropdown_item))
+
+				item_html = HtmlElements.navbar_dropdown.format(dropdown_title = '<img class="menu-dropdown-language-selector" src="/static/images/{}.png">'.format(self.page_language), dropdown_items = sub_items_html)
+				split_position = "right"
+
+			if split == True:
+				if split_position == "left":
+					navbar_items_html += item_html + "\n"
+				elif split_position == "right":
+					navbar_items_split_part += item_html 
+				self.navbar = HtmlElements.navbar_2sided.format(page_title = self.page_title, navbar_items_left = navbar_items_html, navbar_items_right = navbar_items_split_part)
+
+			else:
+				navbar_items_html += item_html + "\n"
+				self.navbar = HtmlElements.navbar.format(page_title = self.page_title, navbar_items = navbar_items_html)
+		
 
 	def generate_sidebar(self, items):
 		self.sidebar = ""
 
 		for item in items:
-			print(item)
 			item_html = HtmlElements.sidebar_widget.format(widget_title = item["title"], widget_content = item["content"])
 			self.sidebar += item_html
-
 
 
 		
@@ -127,8 +172,11 @@ class HtmlElements:
 
 	{google_analytics_script}
 	{head_imports}
-	{og_properties}
-
+	{meta_values}
+	
+	<style>
+	{custom_css}
+	</style>
 	</head>
 	
 	<body>
@@ -136,7 +184,7 @@ class HtmlElements:
 	<div class="container">
 
 	{navbar}
-	{featured_banner}
+	{top_banner}
 	{content}
 	{footer}
 	{body_end_imports}
@@ -148,19 +196,24 @@ class HtmlElements:
 	'''
 
 
-	content_layouts = {"full_width" : "",
-					   "right_sidebar" : '''
-										<div class="row">
-										<div class="col-md-8">
-										{main_content}
-										</div>
+	content_layouts = {
+	"full_width" : '''
+	<div class="row">
+	{main_content}
+	</div>
+	''',
+	"right_sidebar" : '''
+	<div class="row">
+	<div class="col-md-8">
+	{main_content}
+	</div>
 
-										<div class="col-md-4">
-										{sidebar}
-										</div>
-										</div>
-										'''
-										}
+	<div class="col-md-4">
+	{sidebar}
+	</div>
+	</div>
+	'''
+	}
 
 	google_analytics_script = '''
 	<script async src="https://www.googletagmanager.com/gtag/js?id={google_analytics_id}"></script>
@@ -173,7 +226,17 @@ class HtmlElements:
 	</script>
 	'''
 
-	navbar_base = '''
+	meta_values = '''
+	<meta charset="utf-8">
+  	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  	<meta name="description" content="{meta_description}">
+  	<meta name="author" content="{meta_author}">
+	<meta property="og:title" content="{og_title}" />
+  	<meta property="og:description" content="{og_description}" />
+  	<meta property="og:image" content="{og_image}" />
+	'''
+
+	navbar = '''
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     	<div class="container">
     	<a class="navbar-brand" href="/">{page_title}</a>
@@ -189,6 +252,28 @@ class HtmlElements:
      	</ul>
   		</div>
 	</nav>
+
+	'''
+
+	navbar_2sided = '''
+	
+	<nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+	<div class="container">
+    <a class="navbar-brand" href="/">{page_title}</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+			{navbar_items_left}
+        </ul>
+        <ul class="navbar-nav">
+			{navbar_items_right}
+        </ul>
+    </div>
+</div>
+</nav>
+
 	'''
 
 	navbar_link = '''
@@ -209,15 +294,20 @@ class HtmlElements:
       	</li>
 	'''
 
+	navbar_language_selector = '''
+	'''
+
 	navbar_dropdown_item = '''
 	<a class="dropdown-item" href="{link_target}">{link_title}</a>\n
 	'''
 
 	sidebar_widget = '''
+	<div class = "sidebar_widget">
 	<div class = "card">
 	<h5 class = card-header>{widget_title}</h5>
     <div class="card-body">
     <p>{widget_content}</p>
+    </div>
     </div>
     </div>
 
@@ -230,6 +320,29 @@ class HtmlElements:
     </div>
   	</footer>
 	'''
+
+
+class PromisetrackerAddOn:
+	custom_css = '''
+	.promise_list_item_title {
+	cursor: pointer;
+	position: relative;
+	display: table;
+	}
+	'''
+
+	custom_html = {
+		"promise_list_item": '''
+		''',
+
+		"promise_category": '''
+		{category_items}
+		'''
+
+	}
+
+
+
 
 
 

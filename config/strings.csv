@@ -1,0 +1,35 @@
+category,string_id,hu,en
+navbar,about,Az oldalról,About
+,politicians,Politikusok,Politicians
+,contact,Kapcsolat,Contact
+,donate,Támogatás,Donate
+promise_list,title_string,"{politician_name} {promise_count} ígéretéből<br>eddig {success_count} teljesült, {partly_count} részben, {progress_count} folyamatban","From the {promise_count} promises of {politician_name}<br>so far {success_count} fulfilled, {partly_count} partly fulfilled, {progress_count} in progress"
+,progress_string,"Teljesült: {success_percentage}, részben: {partly_percentage}, folyamatban: {progress_percentage}","Fulfilled: {success_percentage}, partly: {partly_percentage}, in progress: {progress_percentage}"
+,time_string,"Eltelt idő: {time_past_percentage}, még {time_remaining_months} hónap van hátra {next_election_date}ig","Time passed: {time_past_percentage}, there are {time_remaining_months} months until {next_election_date}"
+progress_statuses,none,meghirdetve,announced
+,progress,folyamatban,in progress
+,partly,részben teljesült,partly fulfilled
+,success,teljesült,fulfilled
+,problem,problémás,has problems
+,failed,meghiúsult,failed
+contact_form,contact_title,Küldj üzenetet,Send us a message
+,contact_description,Az alábbi űrlapon küldött üzenetekre igyekszünk 24 órán belül a megadott e-mail címedre válaszolni,We try our best to respond your messages in 24 hours at the provided e-mail address
+,sender_name,Neved,Your name
+,sender_email,E-mail címed,Your e-mail address
+,subject,Tárgy (nem kötelező),Subject (optional)
+,message_text,Üzenet szövege,Message text
+,captcha_verify,Ha nem vagy robot: mennyi {num1} meg {num2}?,If you aren't a robot: how much is {num1} plus {num2}?
+,button_send,Küldés,Send
+,sent_success,Üzenet sikeresen elküldve,Message successfully sent
+,sent_fail_name,Név megadása kötelező,Name can't be empty
+,sent_fail_email,E-mail cím megadása kötelező,E-mail address can't be empty
+,sent_fail_message,Az üzenet megadása kötelező,Message text can't be empty
+,sent_fail capthca,Az ellenőrző kérdés elvégzése kötelező,The human verification question can't be empty
+about_page,page_title,Ígéretfigyelő - {kg_recommend_link},PromiseTracker - keep track of our politicians fulfilling their promises!
+,short_intro_text,"Az Ígéretfigyelő egy közösségi szerkesztésű hírszemle, ami a politikusok vállalásainak teljesülését követi nyomon az aktuális választási ciklusból eltelt idő arányában. Célja, hogy ezzel segítse a tudatos választókat a politikusok munkájának objektív megítélésében, valamint hogy ösztönözze a politikusokat a felelősségteljes és számonkérhető politizálásra.","PromiseTracker is an open-collaborative news aggregator which helps tracking the progress of politicians keeping their campaign promises or not. Our goal is to give the conscious voters a general, objective overwiev about the work of the politicians and to put pressure on politicians to do their job accountable and responsibly."
+,politician_box_title,Jelenleg az alábbi politikusok programjainak teljesülése követhető a rendszerben:,Currently the program of the following politicians can be tracked in our system 
+,politician_box_name,Név,Name
+,politician_box_country,Hely,Location
+,politician_box_since,Megválasztva,Elected
+,politician_box_title,Pozíció,Title
+,join_us,"Szeretnénk, ha idővel minél több politikus felkerülne az oldalra, ehhez segédszerkesztők jelentkezését várjuk! Amennyiben kedvet érzel hozzá, hogy önkéntesként segítsd az oldalunk céljait, a {register_link} kitöltésével jelentkezhetsz szerkesztőnek.<br><br>Amennyiben pénzadományokkal segítenéd a munkánkat, a {paypal_link} oldalunkon pár kattintással megteheted, havi rendszeres támogatást pedig a {patreon_link} oldalunkon állíthatsz be.","Our goal is to have as many politicians on our page from across Europe and the world as possible - we're looking for volunteers and patroneers who can help reach this. . ülne az oldalra, ehhez segédszerkesztők jelentkezését várjuk! Amennyiben kedvet érzel hozzá, hogy önkéntesként segítsd az oldalunk céljait, az <a href=""/register"">alábbi űrlap</a> kitöltésével jelentkezhetsz szerkesztőnek."
