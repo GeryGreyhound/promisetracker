@@ -97,6 +97,7 @@ class Page:
 
 		self.generate_navbar(self.navbar_items)  # vagyis generate_navbar(items)? Meglátjuk, ez hogy jó
 		self.generate_sidebar(self.sidebar_widgets)
+
 		# self.generate_page_body(self.innen_nem tudom fáradt vagyok de gecire)  - ez lehet h nem is kell, csak a content_layout
 		# sidebar widgetekig elvileg OK a dolog
 
@@ -157,6 +158,8 @@ class Page:
 		for item in items:
 			item_html = HtmlElements.sidebar_widget.format(widget_title = item["title"], widget_content = item["content"])
 			self.sidebar += item_html
+
+
 
 
 		
@@ -329,25 +332,67 @@ class PromisetrackerAddOn:
 	position: relative;
 	display: table;
 	}
+
+	.promise_list_item_news_badge {display:table-cell}
+	"promise_list_item_status" : "display:table-cell"
+	"promise_list_item_details" : "display: none;"
+	"promise_list_item_"
+
 	'''
 
 	custom_html = {
-		"promise_list_item": '''
+
+	"politician_page" : '''
+	{image}
+	{status_counters}
+	{promise_list}
+	'''
+
+	"promise_category": '''
+		{category_items}
+		''',
+	
+	"promise_list_item" : '''
+		<div class="promise_list_item_title" id="{id}_title" onclick="show_details({id})">
+			
+			{news_info_icon}
+		
+			<div style="display:table-cell"><span class="{status_css_class}">&nbsp;{id}&nbsp;</span></div><span style="position: relative; left: 10px; display:table-cell;">{name}</span><br></div>
+	
+			<div class = "promise_list_item_details" id="{id}_details" style="display: none;">
+		    	<div class="card">
+		    		<div class="card-header" onclick="show_details({id})">
+		    		<h4><span class="{status_css_class}">{id} | {status_title}</span>{name}</h4>
+				</div>
+				
+				<ul class="list-group list-group-flush">
+					{articles_list}
+		            
+		            <li class="list-group-item">
+		            	<form class="form-inline" name="form_{id}" method="post" action="">
+		  				<div class="form-group mb-2">Hír ajánlása</div>
+		  				<div class="form-group mx-sm-3 mb-2">
+		    				<input type="text" class="form-control" size="40" name="submit_article_karacsonygergely_{id}" placeholder="http://index.hu/teljesult-igeretrol-szolo-cikk">
+		  				</div>
+		  				<button type="submit" class="btn btn-primary mb-2">Linkbeküldés</button>
+						</form>
+		       		</li>
+		   		</ul>
+			</div>
+	     </div>
+	
 		''',
 
-		"promise_category": '''
-		{category_items}
-		'''
+		"promise_list_news_info_icon" : '''
+		<div style="display:table-cell"><span class="badge badge-light"><img alt="{article_count} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{article_count}</b></span></div>
+		''',
+
+		"promise_list_item_news_list_item" : '''
+		<li class="list-group-item"><a href="/link?url={url}">{title}</a><br><small>({source_name}, {date})</small></li>
+		''',
+
+
 
 	}
-
-
-
-
-
-
-
-
-
 
 

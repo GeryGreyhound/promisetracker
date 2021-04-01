@@ -8,7 +8,7 @@ from psycopg2.extensions import AsIs
 import datetime
 import requests
 
-import v2_html_elements
+import kemocloud_page_builder_v2
 
 class DatabaseConnection:
 
@@ -133,21 +133,15 @@ class PromiseList:
 		dbc.dict_cursor.execute(categories_query, query_data)
 		promise_categories = dbc.dict_cursor.fetchall()
 
-		print("Cats", promise_categories[:2])
-
 		promises_query = "SELECT * FROM promises WHERE politician_id = (%s)" # AND category_id = (%s) AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id"
 		query_data = [self.politician_id]
 		dbc.dict_cursor.execute(promises_query, query_data)
 		promises = dbc.dict_cursor.fetchall()
 
-		print("Proms", promises[:2])
-
 		articles_query = "SELECT * FROM news_articles WHERE politician_id = (%s) ORDER BY article_date DESC"
 		query_data = [self.politician_id]
 		dbc.dict_cursor.execute(articles_query, query_data)
 		articles = dbc.dict_cursor.fetchall()
-
-		print("Arts", articles[:2])
 
 		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s)"
 		query_data = [self.politician_id]
@@ -218,12 +212,6 @@ class PromiseList:
 
 
 class PromiseListType2:
-	# valamiért még így is 2 másodperc ez a fos, valószínűleg a túl sok nested loop miatt
-	# átgondolandó: 13 kategória * 150 ígéret = 1950-szer megyünk végig az összes subitemen, majd 1950-szer megyünk végig mind a jelenleg 164 cikken, 
-	# ami azt jelenti, hogy 319 ezer alkalommal fut le a "if article_promise_id == current_promise.id:" rész
-	# nem lenne egyszerűbb ezt egyszer megcsinálni, aztán az Article objektumot a listába szúrni? 
-
-	#1: létrehozzuk a kategóriák listáját, minden kategórián belül van egy promise_list lista, azon belül vannak a promise objectek, ezekbe szúrjuk az Article obbjecteket, nem kell mindig DB queryzni
 
 	def __init__(self, politician_id):
 		self.politician_id = politician_id
@@ -249,10 +237,10 @@ class PromiseListType2:
 		dbc.cursor.execute(articles_query, query_data)
 		articles = dbc.cursor.fetchall()
 
-		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s)"
+		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s) ORDER BY sub_id"
 		query_data = [self.politician_id]
 		dbc.cursor.execute(subitems_query, query_data)
-		subitems = dbc.cursor.fetchall()
+		sub_items = dbc.cursor.fetchall()
 
 		dbc.connection.close()
 
@@ -271,6 +259,10 @@ class PromiseListType2:
 			if not current_promise.custom_options:
 				current_promise.custom_options = list()
 			current_promise.sub_items = list()
+			for sub_item in sub_items:
+				parent_id = sub_item[1]
+				if parent_id == current_promise.id:
+					current_promise.sub_items.append(sub_item)
 			current_promise.articles = list()
 			current_promise.status = "none"
 
@@ -309,17 +301,76 @@ class PromiseListType2:
 		self.generate_html()
 
 	def generate_html(self):
+		self.promise_list_html = ""
+
 		for promise_category in self.promise_categories:
-			print("-------\n > > >", str(promise_category)[:50])
+
+			category_html = ""
 
 			for promise in promise_category["promise_list"]:
-				print("|", str(promise.__dict__)[:50]) 
+
+				promise.html = ""
+
+				articles_list_html = ""
 
 				if len(promise.articles) > 0:
 
-					for article in promise.articles:
-						print("|||", str(article.__dict__)[:50]) 
+					promise.news_info_icon = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_news_info_icon"].format(article_count = len(promise.articles))
 
+					for article in promise.articles:
+						current_article_html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_item_news_list_item"].format(**article.__dict__)
+						articles_list_html += current_article_html + "\n"
+
+				else:
+					promise.news_info_icon = ""
+
+
+
+
+
+
+				subitem_list_html = ""
+				if len(promise.sub_items) > 0:
+
+					subitem_list_html = ""
+					
+					for sub_item in promise.sub_items:
+						subitem_list_html += "<li>" + str(sub_item) + "</li>\n"
+
+					subitem_list_html = "<ul>" + subitem_list_html + "</ul>"
+
+
+				category_html += promise.html
+
+				# itt megvan minden a promise-hoz
+
+				# még hozzágeneráljuk az ojjekt variable-ökhöz a státusz színes CSS baszt, meg a többi státusz izét a kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_item"]
+				# struktúrájának megfelelően, hogy már tényleg azt is csak annyi legyen letudni, hogy .format(**promise.__dict__) oszt jónapot. SIMPLICITY ÜBER ALLES!!!!
+
+				promise_status_css_classes = {
+					"none" : "badge badge-secondary",
+					"pending" : "badge badge-primary",
+					"partly" : "badge badge-info",
+					"success" : "badge badge-success",
+					"problem" : "badge badge-warning",
+					"failed" : "badge badge-danger"
+				} # ennek is a GLOBAL_SETTINGS-ben kéne majd lennie testreszabhatóan!!!!
+
+				promise.status_css_class = promise_status_css_classes[promise.status]
+				promise.status_title = "folyamatban" # ezt valahogy a stringsből kell, de van-e itt stringsünk? Kéne h legyen, sőt, a Routesben nem kéne, ez is backend feladat tehát itt kell lennie ebben a .PY-ben
+
+				promise.articles_list = articles_list_html
+
+				promise.html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_item"].format(**promise.__dict__)
+
+				category_html += promise.html
+
+			# itt pedig a category-hoz is megvan minden, jöhet a category_html létrehozása v2.PromisetrackerAddOn.custom_html["promise_list_category"].format(????? átgondolós)
+
+			self.promise_list_html += category_html	
+
+		# végül a promise_list HTML-t létrehozzuk, itt csak egy keretet adunk neki, amibe belelapátoljuk a category HTML-eket amikben a promise-html-ek is benne vannak már (elvileg)
+		# de akkor ez nem is kell(?)
 
 
 class Promise:

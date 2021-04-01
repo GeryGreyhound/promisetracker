@@ -25,7 +25,7 @@ sys.path.insert(0, os.getcwd())
 cw = os.getcwd()
 print("CW2: ", cw)
 
-from promisetracker_v2 import *
+# from promisetracker_v2 import *
 
 from common_functions import send_email, StopWatch, csv_to_dict
 import new_refactored_oop_functions as promisetracker_v2
@@ -704,6 +704,25 @@ SITE_CONFIG = {
 SITE_CONFIG["STRINGS"]["page_title"] = {"hu" : "Ígéretfigyelő", "en": "Promisetracker"}
 SITE_CONFIG["STATIC_PAGES"] = ["about", "contact", "donate"]
 SITE_CONFIG["NAVBAR_ITEMS"] = [] # jobban nézne itt ki, de kellenek session variable-ből generált elemek, úgyhogy muszáj rútul külön a route-ba tenni :(
+SITE_CONFIG["HEAD_IMPORTS"] = '''
+<script>
+
+function show_details(id) {{
+  var details_div = document.getElementById(id + "_details");
+  var title_div = document.getElementById(id + "_title");
+  if (details_div.style.display === "none") {{
+    details_div.style.display = "block";
+    title_div.style.display = "none";
+    // window.history.pushState('page2', 'Title', '/promise_' + id);
+  }} else {{
+    details_div.style.display = "none";
+    title_div.style.display = "table";
+    // window.history.pushState('page2', '', '/')
+  }}
+}}
+
+</script>
+'''
 
 
 class DatabaseConnection:
@@ -740,48 +759,9 @@ def create_template(): #(page_permalink, hogy statik oldal kell vagy politikusos
 
 	v2_template.page_title = SITE_CONFIG["STRINGS"]["page_title"][session["language"]]
 	v2_template.page_language = session["language"]
+	v2_template.head_imports += SITE_CONFIG["HEAD_IMPORTS"]
 
 	return v2_template
-
-def create_politician_html(politician):
-	selected_politician = promisetracker_v2.Politician(politician)
-
-	pol_html = "<h2>selected_politician</h2>"
-	for k, v in selected_politician.__dict__.items():
-		pol_html += "{} | {}<hr>\n".format(str(k), str(v))
-
-	pol_html += "<h2>promise_list</h2>"
-
-	for category in selected_politician.promise_list.promise_categories:
-		pol_html += "<h4>category: {}</h4><br>".format(category["name"])
-		pol_html += "{}<br>\n".format(str(category))
-
-
-		for promise in category["promise_list"]:
-
-			pol_html += "promise_item<br>"
-			
-			for item in promise.__dict__.items():
-				pol_html += "{}<br>\n".format(str(item))
-
-			pol_html += "<br><br>"
-
-
-
-		pol_html += "<hr>"
-
-
-
-	return pol_html
-
-
-	# innen folyt, ezt valahogy a pagebuilderben kéne, vagy az addonban, vagy FASZ TUDJA HOL de valahol
-
-	# mi lenne, ha már a Politician object tartalmazná a kész HTML-t? Talán az a legegyszerűbb
-	# oszt itt a create_politician_html helyett egy selected_politician.html van csak OSZT CSŐ
-	# ez a legjobb ötlet!
-
-
 
 
 
@@ -813,8 +793,14 @@ def igeretfigyelo_page(permalink):
 			politicians_navbar_dropdown.append(dropdown_item)
 			if politician[1] == permalink:
 				# check if we need a politician page
+
+				selected_politician = promisetracker_v2.Politician(permalink)
+
+				# a politician_object tartalmazza a promise_listet az pedig a html-t, az 1:1-ben lehet a main_contentje a page_nek
+
+				v2_page.main_content = selected_politician.promise_list.promise_list_html
 				
-				v2_page.main_content = create_politician_html(politician[1])
+
 
 		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 
 		

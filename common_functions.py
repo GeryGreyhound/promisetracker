@@ -1,3 +1,4 @@
+
 import csv
 import json
 import lxml
@@ -108,7 +109,6 @@ class StopWatch:
 
 		stopwatch_string = "> STOPWATCH | Name: {}, TIME: {} | start: {}, end: {}".format(self.name, str(self.difference), self.start_time, self.end_time) 
 		print(stopwatch_string)
-
 
 def csv_to_dict(csv_file):
 	final_dict = dict()
