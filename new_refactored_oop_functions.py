@@ -63,152 +63,6 @@ class Politician:
 		else:
 			self.existent = False
 
-		# dbc.connection.close()
-
-		# [{"title" : "városszépítés", "promises" : [promise_obj, promise_obj, promise_obj], "cat_2": [promise_obj, ...]}
-
-	
-		'''for category in promise_categories:
-			category_details = dict()
-			category_details["title"] = category[2]
-			category_id = category[1]
-			dbc.cursor.execute ("SELECT * FROM promises WHERE politician_id = %s AND category_id = %s AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id", [politician, AsIs(str(category_id))])
-			category_promises = dbc.cursor.fetchall()
-
-			for promise in category_promises:
-				promise_details = dict()
-
-				promise_id = promise[0]
-				promise_counter += 1
-				dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id = (%s) ORDER BY article_date DESC", [self.id, promise_id])
-		'''
-
-		# dbc.connection.close()
-
-
-# refactor bookmark 2021 03 15
-
-
-
-class StopWatch: # commonba!
-	def __init__(self):
-		pass
-
-	def set_start(self):
-		self.start_time = datetime.datetime.now()
-
-	def set_end(self):
-		self.end_time = datetime.datetime.now()
-		self.difference = self.end_time - self.start_time
-		print("STOPWATCH TIME: {} ms".format(str(self.difference.microseconds/1000)))
-
-sw = StopWatch()
-s = "start"
-e = "end"
-
-def stop_watch(mode):
-	if mode == "start":
-		sw.set_start()
-	else:
-		sw.set_end()
-
-# bárhol használható stopper, amivel könnyen lehet mérni funkciók végrehajtási idejét
-
-# stop_watch(s) - stopper indítása
-# stop_watch(e) - stopper leállítása és az eltelt idő kiírása milliseconsban		
-
-				
-class PromiseList:
-	def __init__(self, politician_id):
-		self.politician_id = politician_id
-		self.promises = list()
-		self.status_counters = {"promises" : 0, "none": 0, "success" : 0, "pending" : 0, "partly" : 0, "problem" : 0, "fail" : 0}
-
-		dbc = DatabaseConnection()
-
-		stop_watch(s)
-
-		categories_query = "SELECT * FROM promise_categories WHERE politician_id = (%s) ORDER BY category_id"
-		query_data = [self.politician_id]
-		dbc.dict_cursor.execute(categories_query, query_data)
-		promise_categories = dbc.dict_cursor.fetchall()
-
-		promises_query = "SELECT * FROM promises WHERE politician_id = (%s)" # AND category_id = (%s) AND (custom_options != 'draft' OR custom_options IS NULL) ORDER BY id"
-		query_data = [self.politician_id]
-		dbc.dict_cursor.execute(promises_query, query_data)
-		promises = dbc.dict_cursor.fetchall()
-
-		articles_query = "SELECT * FROM news_articles WHERE politician_id = (%s) ORDER BY article_date DESC"
-		query_data = [self.politician_id]
-		dbc.dict_cursor.execute(articles_query, query_data)
-		articles = dbc.dict_cursor.fetchall()
-
-		subitems_query = "SELECT * FROM subitems WHERE politician_id = (%s)"
-		query_data = [self.politician_id]
-		dbc.dict_cursor.execute(subitems_query, query_data)
-		subitems = dbc.dict_cursor.fetchall()
-
-		dbc.connection.close()
-
-		for category in promise_categories:
-			
-			current_category = dict()
-			current_category["id"] = category[1]
-			current_category["title"] = category[2]
-			current_category["promises"] = list()
-
-			for promise in promises:
-
-				current_promise_custom_options = promise[4]
-				current_promise_id = promise[0]
-				current_promise_category_id = promise[2]
-
-				if current_promise_category_id == current_category["id"]:
-
-					current_promise = Promise(politician_id, current_promise_id)
-					current_promise.id = promise[0]
-					current_promise.name = promise[3]
-					current_promise.custom_options = promise[4]
-					current_promise.sub_items = list()
-					current_promise.articles = list()
-					current_promise.status = "none"
-
-					for subitem in subitems:
-						
-						current_subitem = dict()
-						current_subitem["parent_id"] = subitem[1]
-						
-						if current_subitem["parent_id"] == current_promise.id:
-
-							current_subitem["sub_id"] = subitem[2]
-							current_subitem["name"] = subitem[3]
-
-							current_promise.sub_items.append(current_subitem)
-
-					for counter, article in enumerate(articles):
-
-						article_promise_id = article[5]
-
-						if article_promise_id == current_promise.id:
-						
-							current_article = Article()
-							current_article.date = article[0]
-							current_article.url = article[1]
-							current_article.source_name = article[2]
-							current_article.title = article[3]
-							current_article.promise_id = article_promise_id
-							current_article.promise_status = article[6]
-
-							if counter == 0:
-								current_promise.status = current_article.promise_status
-
-							current_promise.articles.append(current_article)
-
-					current_category["promises"].append(current_promise)
-					self.status_counters["promises"] += 1
-					self.status_counters[current_promise.status] += 1
-
-		stop_watch(e)
 
 
 class PromiseListType2:
@@ -295,8 +149,6 @@ class PromiseListType2:
 				self.status_counters["promises"] += 1
 				self.promise_categories[category_position_in_list]["promise_list"].append(promise)
 
-				# promise.generate_html()     ### - html-t kategóriánként csináljuk inkább egy.egy category container DIV-be téve
-				# amiben később kategória-statisztikák is lehetnek
 
 		self.generate_html()
 
@@ -366,43 +218,6 @@ class Promise:
 		self.status = "none"
 
 
-	def get_articles(self):
-
-		dbc = DatabaseConnection()
-		self.articles = list()
-
-		query_string = "SELECT * FROM news_articles WHERE politician_id = (%s) AND promise_id =  (%s) ORDER BY article_date DESC"
-		query_data = [self.politician_id, self.id]
-		
-		dbc.cursor.execute(query_string, query_data)
-		raw_data = dbc.cursor.fetchall()
-
-		for article in raw_data:
-			current_article = Article()
-
-			'''
-
-			enne így nincs sok értelme, talán úgy lenne, ha a fenti queryben csak alap adatokat kapnánk (pl url) a többit meg mondjuk az Article.get_from_database() tenné hozzá.
-			Hagyjuk nyitva ennek a lehetőségét, de egyelőre overkillnek tűnik, maradjon csak az Article csak azért class, hogy beledobáljuk a queryből kapott variableokat,
-			majd talán a githubon valami nálam okosabb mond valami jobb megoldást, egyelőre a működik -> jóvanazúgy irányelv legyen érvényben
-
-			current_article.date = article[0]
-			current_article.url = article[1]
-			current_article.source_name = article[2]
-			current_article.title = article[3]
-			current_article.politician_id = article[4] # ennek végképp semmi értelme így, átgondolandó hogy miért nem = self.politician_id, hiszen tudjuk
-			current_article.promise_id = article[5] # ugyanez, de fasz kivan, M&JVAU
-			current_article.promise_status = article[6]
-
-			self.articles.append(current_article)
-
-		'''
-
-		dbc.connection.close()
-
-	def generate_html(self):
-		html_base = v2_html_elements.HtmlElements()
-		self.html = html_base.testing_variable_insertions.format(**self.__dict__)
 
 
 class Article:
@@ -563,113 +378,22 @@ class Article:
 
 		# dbc.connection.close()
 
-class Page:
-	def __init__(self):
-		self.defaults = {"language" : "hu", "google_analytics_id" : "UA-85693466-4", "facebook_page_id" : "igeretfigyelo", }
-
-		try:
-			if "language" in session:
-				self.language = session["language"]
-			else:
-				self.language = self.defaults["language"]
-		except:
-			# no session mode for testing
-			self.language = self.defaults["language"]
-
-		# default values for page generator
-		self.og_title = "Ígéretfigyelő - Promisetracker v2"
-		self.og_description = "Ez itt a leírás"
-		self.og_image = ""
-		self.html_title = ""
-
-	def construct_html(self):
-
-		html_head = '''
-		<!DOCTYPE html>
-		<html lang="{}">
-		<head>
-		<script async src="https://www.googletagmanager.com/gtag/js?id={}"></script>
-		<script>
-  			window.dataLayer = window.dataLayer || [];
-  			function gtag(){{dataLayer.push(arguments);}}
-  			gtag('js', new Date());
-  			gtag('config', '{}');
-		</script>
-
-		<script src='https://kit.fontawesome.com/a076d05399.js'></script>
-
-		<meta charset="utf-8">
-  		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
- 		<meta name="description" content="">
-  		<meta name="author" content="">
-  		<meta property="og:title" content="{}" />
-  		<meta property="og:description" content="{}" />
-  		<meta property="og:image" content="http://www.igeretfigyelo.hu/{}" />
-
-  		<title>{}</title>
-
-  		<!-- Bootstrap core CSS -->
-  		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-  		<!-- Custom styles for this template -->
-  		<link href="/static/css/blog-home.css" rel="stylesheet">
-
-  		</head>
-		'''.format(self.language,
-				   self.defaults["google_analytics_id"],
-				   self.defaults["google_analytics_id"],
-				   self.og_title,
-				   self.og_description,
-				   self.og_image,
-				   self.html_title
-				   )
-
-		navbar = '''
-		  <!-- Navigation -->
-		  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-		  <div class="container">
-		  <a class="navbar-brand" href="/">Ígéretfigyelő</a>
-		  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-		  <span class="navbar-toggler-icon"></span>
-		  </button>
-		
-		  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-		    <ul class="navbar-nav mr-auto">
-		      <li class="nav-item">
-		        <a class="nav-link" href="/about">Mi ez és kik csinálják?</a>
-		      </li>
-		      <li class="nav-item dropdown">
-		        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		          Politikusok
-		        </a>
-		        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-		          <a class="dropdown-item" href="/csoziklaszlo">Csőzik László (Érd)</a>
-		          <a class="dropdown-item" href="/fulopzsolt">Fülöp Zsolt (Szentendre)</a>
-		          <a class="dropdown-item" href="/karacsonygergely">Karácsony Gergely (Budapest)</a>
-		        </div>
-		      </li>
-		      <li class="nav-item">
-		        <a class="nav-link" href="/contact">Kapcsolat</a>
-		      </li>
-		    </ul>
-		  </div>
-		</nav>
-		'''
-
-		self.html_page = html_head + "\n" + navbar
-
-
 
 class Submission:
+	def __init__(self):
+		pass
+
 	def create_from_url(self, url, politician_id, promise_id):
 		self.url = url
 		self.politician_id = politician_id
 		self.promise_id = promise_id
 
-		try:
-			r = request.get(url)
-		except:
-			self.response_error = r.status_code
+
+		self.article = Article(url = self.url)
+		self.article.get_meta_data()
+
+
+
 
 
 

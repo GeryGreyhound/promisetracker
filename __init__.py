@@ -863,7 +863,22 @@ def igeretfigyelo_page(permalink):
 		
 
 		if request.method == "POST":
-			print("V2 POST innen")
+			v2_submission = promisetracker_v2.Submission()
+
+			for key in request.form.keys():
+				for value in request.form.getlist(key):
+
+					politician_promise = key.replace("submit_article_", "") #submit_article_politican_promise a form field ID, abból lesznek ezek
+					politician_id, promise_id = politician_promise.split("_")
+					url = value
+
+			v2_submission.create_from_url(url, politician_id, promise_id)
+			# session["submission_data"] = v2_submission
+
+			for x in range(1):
+				print("nemtom miezitt innen folyt")
+
+
 
 		return Markup(v2_page.final_html)
 	

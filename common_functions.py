@@ -91,8 +91,12 @@ class ScrapeEasy:
 				print("Fail:", mt)
 				self.meta_dict[mt.get("name")] = {"property" : mt.get("property"), "content" : mt.get("content")}
 
-
+		
 class StopWatch:
+	# bárhol használható stopper, amivel könnyen lehet mérni funkciók végrehajtási idejét
+
+	# stop_watch(s) - stopper indítása
+	# stop_watch(e) - stopper leállítása és az eltelt idő kiírása milliseconsban
 	def __init__(self, command = None, name = None):
 		self.name = name
 		if not command:
