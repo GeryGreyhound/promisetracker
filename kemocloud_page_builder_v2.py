@@ -326,11 +326,51 @@ class HtmlElements:
 
 
 class PromisetrackerAddOn:
+
+	def __init__(self, permalink):
+		# itt kéne valahogy a static page-ek előállításához szükséges egyedi dolgokat létrehozni
+		# RUSHIT 2104 de most leszarni
+		print("INIT ITT", self.__dict__)
+		pass
+
+	def generate_static_page_main_content(self, permalink, custom_data):
+		if permalink == "about":
+			pass
+
+
 	custom_css = '''
+	<!-- ezek a PromiseTrackerAddOn saját CSS-ei, bele kell tenni az alap Pagebuilder custom_css-ébe --> 
+
 	.promise_list_item_title {
-	cursor: pointer;
+	cursor: pointer !important;
 	position: relative;
 	display: table;
+	}
+
+	.promise_list_news_icon {
+	display:table-cell;
+	width: 42px !important;
+	margin-right: 5px;
+	}
+
+	.promise_list_promise_id {
+	display:table-cell;
+	width: 42px !important;
+	margin-right: 10px;
+	}
+
+	promise_list_promise_id_color {
+	width: 42px !important;
+	}
+
+	.promise_list_promise_name {
+	display:table-cell;
+	padding-left: 10px;
+
+	}
+
+	.promise_details_promise_name {
+	padding-left: 10px;	
 	}
 
 	.promise_list_item_news_badge {display:table-cell}
@@ -346,23 +386,28 @@ class PromisetrackerAddOn:
 	{image}
 	{status_counters}
 	{promise_list}
-	'''
+	''',
 
-	"promise_category": '''
+	"promise_list_category": '''
+		<h4 class="promise_category_name">{name}</h4>
 		{category_items}
+		<hr>
 		''',
 	
 	"promise_list_item" : '''
-		<div class="promise_list_item_title" id="{id}_title" onclick="show_details({id})">
+		<div class="promise_list_item_title" style="cursor: pointer !important;" id="{id}_title" onclick="show_details({id})">
 			
 			{news_info_icon}
 		
-			<div style="display:table-cell"><span class="{status_css_class}">&nbsp;{id}&nbsp;</span></div><span style="position: relative; left: 10px; display:table-cell;">{name}</span><br></div>
-	
+			<div class="promise_list_promise_id"><span class="{status_css_class} w-100" style="width: 42px !important;">{id}</span></div><span class="promise_list_promise_name">{name}</span>
+			
+			{sub_items}</div>
+
 			<div class = "promise_list_item_details" id="{id}_details" style="display: none;">
 		    	<div class="card">
 		    		<div class="card-header" onclick="show_details({id})">
-		    		<h4><span class="{status_css_class}">{id} | {status_title}</span>{name}</h4>
+		    		<h4><span class="{status_css_class}">{id} | {status_title}</span><span class="promise_details_promise_name">{name}</span></h4>
+		    		{sub_items}
 				</div>
 				
 				<ul class="list-group list-group-flush">
@@ -379,19 +424,52 @@ class PromisetrackerAddOn:
 		       		</li>
 		   		</ul>
 			</div>
-	     </div>
+	   </div>
 	
 		''',
 
 		"promise_list_news_info_icon" : '''
-		<div style="display:table-cell"><span class="badge badge-light"><img alt="{article_count} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{article_count}</b></span></div>
+		<div class="promise_list_news_icon"><span class="badge badge-light" style="width: 42px !important;"><img alt="{article_count} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{article_count}</b></span></div>
+		''',
+
+		"promise_list_no_news_icon" : '''
+		<div class="promise_list_news_icon"><span class="badge badge-light" style="width: 42px !important; opacity: 0;"><img alt="nincs kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; opacity:0; margin-right: 5px;"><b> </b></span></div>
 		''',
 
 		"promise_list_item_news_list_item" : '''
 		<li class="list-group-item"><a href="/link?url={url}">{title}</a><br><small>({source_name}, {date})</small></li>
 		''',
+	}
 
+	static_pages = {
+	"about" : '''
+	<div class="card mb-4">
+		<div class = "card-header">
+			<h4>{title}</h4>
+		</div>
+   		<div class="card-body">
 
+   			<p>{short_intro_text}</p>
+
+   			<table class="table table-striped">
+			  <thead>
+			    <tr>
+			      <th scope="col">{politician_box_name}</th>
+			      <th scope="col">{politician_box_location}</th>
+			      <th scope="col">{politician_box_title}</th>
+			      <th scope="col">{politician_box_since}</th>
+			      <th scope="col">{politician_box_promises}</th>
+			    </tr>
+			  </thead>
+			  <tbody>
+			  	{politician_box_politician_list}
+			  </tbody>
+			</table>
+
+   			<p>{more_intro_text}</p>
+		</div>
+	</div>
+	''',
 
 	}
 

@@ -304,13 +304,11 @@ class PromiseListType2:
 		self.promise_list_html = ""
 
 		for promise_category in self.promise_categories:
-
-			category_html = ""
+			category_promises_html = ""
 
 			for promise in promise_category["promise_list"]:
 
 				promise.html = ""
-
 				articles_list_html = ""
 
 				if len(promise.articles) > 0:
@@ -322,27 +320,20 @@ class PromiseListType2:
 						articles_list_html += current_article_html + "\n"
 
 				else:
-					promise.news_info_icon = ""
+					promise.news_info_icon = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_no_news_icon"]
 
-
-
-
-
-
-				subitem_list_html = ""
+				sub_items_list_html = ""
 				if len(promise.sub_items) > 0:
 
-					subitem_list_html = ""
+					sub_items_list_html = ""
 					
 					for sub_item in promise.sub_items:
-						subitem_list_html += "<li>" + str(sub_item) + "</li>\n"
+						sub_items_list_html += "<li>" + str(sub_item[3]) + "</li>\n"
 
-					subitem_list_html = "<ul>" + subitem_list_html + "</ul>"
+					sub_items_list_html = '<div class="subitems_wrapper" style="display: table-row;"><div style="display: table-cell;"></div><div style="display: table-cell;"></div><ul style="display: table-cell; width: 100%;">' + sub_items_list_html + "</ul></div>"
 
+				promise.sub_items = sub_items_list_html
 
-				category_html += promise.html
-
-				# itt megvan minden a promise-hoz
 
 				# még hozzágeneráljuk az ojjekt variable-ökhöz a státusz színes CSS baszt, meg a többi státusz izét a kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_item"]
 				# struktúrájának megfelelően, hogy már tényleg azt is csak annyi legyen letudni, hogy .format(**promise.__dict__) oszt jónapot. SIMPLICITY ÜBER ALLES!!!!
@@ -358,19 +349,14 @@ class PromiseListType2:
 
 				promise.status_css_class = promise_status_css_classes[promise.status]
 				promise.status_title = "folyamatban" # ezt valahogy a stringsből kell, de van-e itt stringsünk? Kéne h legyen, sőt, a Routesben nem kéne, ez is backend feladat tehát itt kell lennie ebben a .PY-ben
-
 				promise.articles_list = articles_list_html
-
 				promise.html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_item"].format(**promise.__dict__)
+				category_promises_html += promise.html
 
-				category_html += promise.html
 
-			# itt pedig a category-hoz is megvan minden, jöhet a category_html létrehozása v2.PromisetrackerAddOn.custom_html["promise_list_category"].format(????? átgondolós)
-
+			category_html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_category"].format(name = promise_category["name"], category_items = category_promises_html)
 			self.promise_list_html += category_html	
 
-		# végül a promise_list HTML-t létrehozzuk, itt csak egy keretet adunk neki, amibe belelapátoljuk a category HTML-eket amikben a promise-html-ek is benne vannak már (elvileg)
-		# de akkor ez nem is kell(?)
 
 
 class Promise:
@@ -671,6 +657,20 @@ class Page:
 		'''
 
 		self.html_page = html_head + "\n" + navbar
+
+
+
+class Submission:
+	def create_from_url(self, url, politician_id, promise_id):
+		self.url = url
+		self.politician_id = politician_id
+		self.promise_id = promise_id
+
+		try:
+			r = request.get(url)
+		except:
+			self.response_error = r.status_code
+
 
 
 

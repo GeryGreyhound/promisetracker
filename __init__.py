@@ -145,7 +145,10 @@ def fetch_article_data(article_url, soup):
 	if "facebook" in article_url:
 		title_string = sql_injection_filter(soup.find("title").string)
 		print(title_string)
-		title, junk = title_string.split(" - ")
+		try:
+			title, junk = title_string.split(" - ")
+		except:
+			title = title_string
 		source_name = "Facebook - " + title
 		article_title = " [cím beolvasása nem sikerült]"
 
@@ -218,9 +221,9 @@ def main_page():
 			return redirect(referrer)
 		else:
 			return redirect("/")
-	return redirect("/about")
+	return redirect("/about_v1")
 
-@app.route("/about")
+@app.route("/about_v1")
 def about_page():
 	page_properties = dict()
 	page_properties["og-title"] = "ÍgéretFigyelő"
@@ -229,7 +232,7 @@ def about_page():
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
 
 
-@app.route("/contact", methods = ["POST", "GET"])
+@app.route("/contact_v1", methods = ["POST", "GET"])
 def contact_page():
 	page_properties = dict()
 	page_properties["og-title"] = "ÍgéretFigyelő"
@@ -740,7 +743,7 @@ class DatabaseConnection:
 
 def get_politicians_list(): # itt lehetnek majd country=hu, aktív = True, adminnak az inaktívak is látszódhatnak, stb
 	politicians_query = '''
-		SELECT name, id, location FROM politicians
+		SELECT name, id, location, position, elected FROM politicians
 		JOIN politician_meta on politicians.id = politician_meta.politician_id
 		WHERE meta_parameter = 'active' AND meta_value = 'true'
 		ORDER BY name
@@ -761,6 +764,8 @@ def create_template(): #(page_permalink, hogy statik oldal kell vagy politikusos
 	v2_template.page_language = session["language"]
 	v2_template.head_imports += SITE_CONFIG["HEAD_IMPORTS"]
 
+	v2_template.custom_css += kemocloud_page_builder_v2.PromisetrackerAddOn.custom_css # ezekre majd valami automatizmust plugin importjakor
+
 	return v2_template
 
 
@@ -771,6 +776,7 @@ def igeretfigyelo_page(permalink):
 
 	benchmark_start_time = datetime.datetime.now()
 	print("V{} benchmark: request received: {}".format(session["version"], datetime.datetime.now()))
+	print("permalink:", permalink)
 
 	if session["version"] == "2":
 
@@ -799,17 +805,52 @@ def igeretfigyelo_page(permalink):
 				# a politician_object tartalmazza a promise_listet az pedig a html-t, az 1:1-ben lehet a main_contentje a page_nek
 
 				v2_page.main_content = selected_politician.promise_list.promise_list_html
+		
+		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 				
+
+		
+		if permalink in kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages:
+
+			# RUSHIT 2104 | ideiglenesen itt hozzuk létre a static page-ekhez szükséges plusz elemeket, de erre majd ki kell találni valami elegánsabbat a pagebuilderben
+
+			page_custom_variables = dict()
+			for string_id, string in SITE_CONFIG["STRINGS"][permalink].items():
+				page_custom_variables[string_id] = string[session["language"]]
+
+			if permalink == "about":
+				politician_box_table_row = "<tr><td><a href=/{page_url}>{name}</a></td><td>{location}</td><td>{position}</td><td>{elected}</td><td>{promises}</td></tr>"
+				page_custom_variables["politician_box_politician_list"] = ""
+				for politician in politicians:
+					row_data = {"page_url" : politician[1],
+								"name" : politician[0].replace(" ", "&nbsp"),
+								"location" : politician[2],
+								"position" : politician[3],
+								"elected" : str(politician[4])[:10],
+								"promises" : "<small>{success_percentage} {strings_success}<br>{progress_percentage} {strings_progress}</small>"}
+
+					page_custom_variables["politician_box_politician_list"] += politician_box_table_row.format(**row_data)
+
+				page_custom_variables["politician_box_politician_list"] += "<tr><td colspan=5>5 col széles alsó sor - itt lesz majd az új politikus regisztrációja</td></tr>"
+				
+				page_custom_variables["politician_box_add_new"] = "új", 
+				page_custom_variables["more_intro_text"] = "blabla"
+
+			
+			elif permalink == "contact":
+				pass
+
+			elif permalink == "donate":
+				pass
+
+			elif permalink == "blog":
+				pass
 				
 
+			v2_page.main_content = kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages[permalink].format(**page_custom_variables)
+			print(kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages[permalink])
 
-		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 
 		
 		
-		# generate specific pages
-
-
-
-
 
 
 		benchmark_end_time = datetime.datetime.now()
@@ -819,6 +860,11 @@ def igeretfigyelo_page(permalink):
 		v2_page.assemble_html_parts()
 		print("V2 benchmark: returning Markup: {}".format(datetime.datetime.now()))
 		print("V2 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
+		
+
+		if request.method == "POST":
+			print("V2 POST innen")
+
 		return Markup(v2_page.final_html)
 	
 
@@ -878,6 +924,7 @@ def igeretfigyelo_page(permalink):
 					v1,v2,permalink,promise_id = key.split("_")
 				except:
 					pass
+				
 				url = value
 
 				try:
@@ -885,6 +932,15 @@ def igeretfigyelo_page(permalink):
 				except:
 					response = r_error()
 					response.status_code = None
+
+				sub_v2 = promisetracker_v2.Submission()
+				sub_v2.create_from_url(url = url, politician_id = permalink, promise_id = promise_id)
+
+				for k, v in sub_v2.__dict__.items():
+					print("Submission object", k, v)
+
+				for k, v in sub_v2.article.__dict__.items():
+					print("Submission.article object", k, v)
 				
 				print ("response.status_code", response.status_code)
 				
