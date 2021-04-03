@@ -17,7 +17,15 @@ import time
 cw = os.getcwd()
 print("CW1: ", cw)
 
+'''
 
+This file was originally created back in 2019 when I was lack of any OOP-knowledge so it contained all the back-end functions in a procedural way.
+Now it's being rewritten from the ground up while trying to maintain the working of the old version (you can see it in action after @app.route("/<permalink>") - 
+session["version"] is controlled by a v=1 or v=2 URL argument. I know it's a little bit messy, but I think I can "de-spaghettize" this whole thing :) 
+
+If you got any question or suggestion, feel free to contact me on GitHub
+
+'''
 
 os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
 sys.path.insert(0, os.getcwd())
@@ -32,14 +40,16 @@ import new_refactored_oop_functions as promisetracker_v2
 import kemocloud_page_builder_v2
 
 promise_statuses = {"none" : "meghirdetve", "pending" : "folyamatban", "partly" : "részben", "success" : "sikeres", "problem" : "problémás", "failed" : "meghiúsult"}
+# ez itt baromság, V2 scripts-rendszer feleslegessé teszi, de a V1 használja
+
 
 MAIN_SETTINGS = dict()
 MAIN_SETTINGS["DEBUG_OPTIONS"] = False
 
 app = Flask(__name__)
-app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True # ha nincs template, ez se kell.
 
-class DatabaseOperations:
+class DatabaseOperations: # V2: DB-műveletek valószínűleg nem lesznek itt a Route-ok között, de azért még maradjon
 
 	def __init__(self):
 		config_file = "database.conf"
@@ -53,6 +63,9 @@ class DatabaseOperations:
 
 
 def get_politician_data(politician):
+	#v2 - kukázandó, ehelyett egy promisetracker_v2.Politician objectet hozunk létre
+	# használva kizárólag a /news aloldalon, amit a Politician objectből is létre tudunk hozni
+	# tehát mindkét funkció felesleges
 	dbc = DatabaseOperations()
 	dbc.cursor.execute("SELECT * FROM politicians WHERE id = '" + politician + "';")
 	selected_politician = dbc.cursor.fetchone()
@@ -66,6 +79,9 @@ def get_politician_data(politician):
 
 
 def sql_injection_filter(string):
+	#v2 = ez gagyi és ELVILEG obsolete amióta a SQL Query-k (%s) karakterekkel mennek
+	# de azért még meg kell győződni róla
+	# használva 7 helyen, gyomlálni kell még vagy megvárni a V1 kukázást!
 
 	message = ""
 	if string.find("DROP") != -1:
@@ -92,8 +108,11 @@ sources = {"facebook.com/133909266986" : "Facebook - VEKE",
 		  "444.hu" : "444",
 		  "vastagbor.atlatszo" : "Vastagbőr blog"
 		  }
+#v2 - ezek valahogy a configba mennek majd, de a v2.Article.get_meta_data() is tartalmazza, úgyhogy v2-höz tuti nem kell, V1-gyel pusztulhat
 
 def fetch_article_data(article_url, soup):
+	#V2: obsolete, amióta a promisetracker_v2.Article.get_meta_data csinálja, de a V1 működéséhez még kell. V1 kiiktatásakor törölhető!
+	# promisetracker_v2 referencia ne zavarjon meg: alul az obsolete kódrészből használja valami
 	metas = soup.find_all('meta')
 	try:
 		article_title = sql_injection_filter(soup.find("meta",  attrs={'name':'title'})['content'])
@@ -168,8 +187,7 @@ def fetch_article_data(article_url, soup):
 
 @app.before_request
 def before_request_func():
-
-
+	#V2: fontos és kell egyelőre, amíg nem a V2 a default
 	if not "version" in session or "v" in request.args:
 		session["version"] = request.args.get("v")
 		if not session["version"]:
@@ -181,7 +199,7 @@ def before_request_func():
 			session["language"] = "hu"
 		
 
-
+	#V2 ez csinosításra szorul - jó lenne a common_functionsba tenni valamit, mert bármilyen projektben is kellhet a júzer IP-címe bármire.
 	headers_list = request.headers.getlist("X-Forwarded-For")
 	user_ip = headers_list[0] if headers_list else request.remote_addr
 
@@ -207,11 +225,11 @@ def before_request_func():
 		with open ("/var/www/igeretfigyelo/igeretfigyelo/access_log.csv", "a") as logfile:
 			logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "," + str(user_ip) + "," + str(request.url) + "," + str(request.referrer) + "\n")
 
-	if request.referrer:
-		if "best-proxies.ru" in request.referrer:
-			print("Orosz izé redirectelve")
-			return redirect("https://www.pornhub.com/gayporn")
-			
+
+
+
+#V1 static oldalak - kukázandók a v1 kukázásakor ---->
+	
 @app.route("/", methods = ["POST", "GET"])
 def main_page():
 	if "lang" in request.args:
@@ -257,8 +275,17 @@ def contact_page():
 	else:	
 		return render_template("contact.html", page_properties = page_properties, static_content = "static_content")
 
+
+# -----> eddig a kukázandó V1 static oldalak, a Contact még kell V2-be
+
+
+
 @app.route("/accept_invite")
 def invite():
+	# V2: átírandó, bár kár lenne túlbonyolítani, maradhat is így
+	# csak az ilyen page_properties agyrémet kell kipusztítani, az egész function csak egy v2_page.main_html-t csináljon return nélkül
+	# mehet a fő @app.route(/<permalink>) functionbe is
+
 	dbc = DatabaseOperations()
 	page_properties = dict()
 	email = request.args.get("email")
@@ -281,12 +308,13 @@ def invite():
 
 	page_properties["politicians"] = {"karacsonygergely" : "Karácsony Gergely", "shrekszilard" : "Shrek Szilárd (az oldal funkcióinak tesztelését segítő teszt politikus)", "csoziklaszlo" : "Csőzik László", "fulopzsolt": "Fülöp Zsolt"}
 	
-	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
+	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"} #LOL ez viszont faszság
 
 	return render_template("invite.html", page_properties = page_properties, static_content = "static_content")
 
 @app.route("/reset_gj")
 def gipsz_jakab():
+	# kell invite-debugoláshoz
 	dbc = DatabaseOperations()
 	dbc.cursor.execute("INSERT INTO invitations VALUES (%s, %s, %s)", ["gipsz.jakab@gmail.com", "Gipsz Jakab", "csoziklaszlo"])
 	dbc.cursor.execute("SELECT * FROM users WHERE email = 'gipsz.jakab@gmail.com'")
@@ -302,6 +330,7 @@ def gipsz_jakab():
 
 @app.route("/register", methods = ["POST"])
 def register():
+	#V2 - ez még egyáltalán sehogy nem áll az új OOP-logikában, megtartandó és átírandó a második menetben
 	dbc = DatabaseOperations()
 	display_name = request.form.get("display_name")
 	password_1 = request.form.get("password1")
@@ -347,6 +376,7 @@ def register():
 
 @app.route("/news")
 def news_page():
+	#V2 - ez még egyáltalán sehogy nem áll az új OOP-logikában, megtartandó és átírandó a második menetben
 	dbc = DatabaseOperations()
 	politician = request.args.get("politician_name")
 	selected_politician = get_politician_data (politician)
@@ -383,6 +413,7 @@ def news_page():
 
 
 def get_users_politicians(user_id):
+	#V2 - ez még egyáltalán sehogy nem áll az új OOP-logikában, megtartandó és átírandó a második menetben
 	dbc = DatabaseOperations()
 	dbc.cursor.execute("SELECT * FROM users WHERE id = (%s)", [user_id])
 	selected_user = dbc.cursor.fetchone()
@@ -414,6 +445,9 @@ def session_reset():
 
 @app.route("/ifadmin")
 def admin_page():
+	#V2 - SOK KÉRDÉST FELVETŐ RÉSZ
+	# ez még egyáltalán sehogy nem áll az új OOP-logikában, megtartandó és átírandó a második menetben
+	# to-do: marked-confirmed anomáliák, DB struktúra átgondolásra szorul, Submission objectek használandók
 	if "debug_mode" in request.args:
 		MAIN_SETTINGS["DEBUG_OPTIONS"] = True
 	else:
@@ -430,7 +464,6 @@ def admin_page():
 		edit_feedback[value] = list()
 		if key in request.args:
 			edit_feedback[value] = list(request.args.get(key).split("_"))
-
 
 
 	page_properties = dict()
@@ -634,6 +667,7 @@ def admin_page():
 
 @app.route("/login", methods=["POST", "GET"])
 def ifadmin_login():
+	#V2: nagyjából maradhat, csak a plain text password hashelése vár megvalósítása
 
 	page_properties = dict()
 	sidebar = dict()
@@ -865,6 +899,7 @@ def igeretfigyelo_page(permalink):
 		if request.method == "POST":
 			v2_submission = promisetracker_v2.Submission()
 
+
 			for key in request.form.keys():
 				for value in request.form.getlist(key):
 
@@ -875,8 +910,11 @@ def igeretfigyelo_page(permalink):
 			v2_submission.create_from_url(url, politician_id, promise_id)
 			# session["submission_data"] = v2_submission
 
-			for x in range(1):
-				print("nemtom miezitt innen folyt")
+			for k, v in v2_submission.__dict__.items():
+				print("Submission object", k, v)
+
+			for k, v in v2_submission.article.__dict__.items():
+				print("Submission.article object", k, v)
 
 
 
@@ -892,6 +930,11 @@ def igeretfigyelo_page(permalink):
 
 
 		# # # # # Eddig a V2 kész # # # # #
+
+		# ami az alábbiakból fontos, az a page_properties katyvasz, annak még nincs V2 OOP megfelelője
+		# bár a Politician object minden szükséges adatot tartalmaz hozzá
+
+		# alább V1 alap oldal működéséhez szükséges dolgok, kukázandók a V1 kukázásakor ----->
 
 
 
@@ -948,14 +991,7 @@ def igeretfigyelo_page(permalink):
 					response = r_error()
 					response.status_code = None
 
-				sub_v2 = promisetracker_v2.Submission()
-				sub_v2.create_from_url(url = url, politician_id = permalink, promise_id = promise_id)
 
-				for k, v in sub_v2.__dict__.items():
-					print("Submission object", k, v)
-
-				for k, v in sub_v2.article.__dict__.items():
-					print("Submission.article object", k, v)
 				
 				print ("response.status_code", response.status_code)
 				
@@ -1181,8 +1217,12 @@ def igeretfigyelo_page(permalink):
 		return render_template("igeretfigyelo.html", selected_promise_id = selected_promise_id, static_content = "static content", page_properties = page_properties, permalink = politician)
 
 
+		# ------> eddig kukázható a V1 kukázásakor
+
+
 @app.route("/process_submission")
 def submission_processor():
+	#V2 átállás folyamatban, a Submission class kezeli majd ezeket mindent. Kell még az alap V1 működéshez ------>
 	dbc = DatabaseOperations()
 
 	submission_id = str(request.args.get("submission_id"))
@@ -1246,8 +1286,12 @@ def submission_processor():
 	return redirect("/" + politician + "?submission_success=" + str(submission_parameters['id']))
 
 
+	# ----> egészen idáig. 
+
+
 def validate_submission(submission_data):
 	dbc = DatabaseOperations()
+	#V2 - átírandó a Submission class-be
 
 	validation_errors = dict()
 
@@ -1298,6 +1342,7 @@ def validate_submission(submission_data):
 
 @app.route("/manage_submissions", methods = ["POST"])
 def save_changes():
+	#V2: sehol nincs még, Submission class-be való
 	dbc = DatabaseOperations()
 	f = request.form
 	submissions = dict()
@@ -1565,6 +1610,20 @@ def activity_log_page():
 	return render_template("activity_log.html", activities = activities, page_properties = {"sidebar" : {"title" : "", "contents" : ""}}, static_content = "")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# nem promisetrackerhez kapcsolódó dolgok, külön fájlba kell tenni és GITIGNORE menjen rá
+# addig TILOS a git repót kinyitni
 
 
 

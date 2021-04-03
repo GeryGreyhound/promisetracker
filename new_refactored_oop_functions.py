@@ -63,6 +63,9 @@ class Politician:
 		else:
 			self.existent = False
 
+	def create article_list(self):
+		pass
+
 
 
 class PromiseListType2:
@@ -359,6 +362,7 @@ class Article:
 		pass
 
 	def add_to_submissions(self, politician_id, promise_id, submitter_name, submitter_ip, submit_date, suggested_status):
+		# ezt lehet, hogy inkább egy Submission class-ben kéne intézni? És annak lesz egy self.article-je, akkor nem kell ez a sok szarság
 		dbc = DatabaseConnection()
 		
 		checkable_variables = [self.title, self.source_name, self.date]
@@ -370,13 +374,20 @@ class Article:
 		last_id = dbc.cursor.fetchone()[0]
 		new_id = last_id + 1
 		
-
 		query_string = "INSERT INTO submissions VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 		query_data = [self.date, submitter_ip, self.url, self.source_name, self.title, politician_id, promise_id, submit_date, submitter_name, new_id, None, None, suggested_status]
 
 		dbc.cursor.execute(query_string, query_data)
 
-		# dbc.connection.close()
+		dbc.connection.close()
+
+
+class ArticleList:
+	pass
+	# eldöntendő: ez legyen így, vagy a Politician object tartalmazza?
+	# elvégre ott minden, az adott politikushoz tartozó hírt queryzünk és az object tartalmazza,
+	# semeddig nem tart egy sima list-be is tenni, ahogy a /news oldalra kell.
+	#simplicity #RUSHIT2104
 
 
 class Submission:
@@ -388,9 +399,21 @@ class Submission:
 		self.politician_id = politician_id
 		self.promise_id = promise_id
 
-
 		self.article = Article(url = self.url)
 		self.article.get_meta_data()
+		# ide a lenti mainből még megmaradt régi functionjei, amik berakják a submission table-be és létrehozzák a sikeres beküldés oldalt
+
+
+
+
+
+class User:
+	def __init__(self, login_id):
+		pass
+
+	# user létrehozása: belépéskor vagy? Elvileg csak belépéskor TEHÁT lehet kezdeni login ID-vel (ami email)
+
+
 
 
 

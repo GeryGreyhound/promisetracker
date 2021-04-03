@@ -439,6 +439,29 @@ class PromisetrackerAddOn:
 		"promise_list_item_news_list_item" : '''
 		<li class="list-group-item"><a href="/link?url={url}">{title}</a><br><small>({source_name}, {date})</small></li>
 		''',
+
+		"submission_success_box" : '''
+		<table class="table table-sm table-striped">
+	    
+	    <tbody>
+	    <tr><td style="text-align: right;"><b>{article_date_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{ip_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{url_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{source_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{title_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{politician_id_string}</b></td><td>{}</td></tr>
+	    <tr><td style="text-align: right;"><b>{promise_id_string}</b></td><td>{} - {}</td></tr>
+	    <tr><td style="text-align: right;"><b>{submit_date_string}</b></td><td>{}</td></tr>
+	    
+	    </tbody></table>
+
+	    <h2 class="alert alert-success" role="alert" style="margin-top: 10px; margin-bottom: 10px">{submit_success_string}</h2>
+	    <p>{submit_success_additional_string}</p>
+		''',
+
+		# V2.5 to-do: az additional_stringben link a javításhoz, regisztráció felajánlása ha tudni szeretné a júzer mi lett a beküldött cikk sorsa, de ez már tényleg csicsa
+
+		# V2.5 to-do: legyen itt kép is mentve a cikkből (OG:image például, vagy az oldal logója nagyban, mint a Telex FB default) és legyen a cikklista képes, de ez már tényleg abszolút csicsa
 	}
 
 	static_pages = {
