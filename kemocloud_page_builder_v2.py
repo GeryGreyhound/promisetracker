@@ -428,6 +428,27 @@ class PromisetrackerAddOn:
 	
 		''',
 
+		"status_counters" : '''
+		<div class="card-body">
+
+		<div class="progress" style="height: 30px">
+  		<div class="progress-bar bg-success" role="progressbar" style="width: {success}%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">{success}%</div>
+ 		<div class="progress-bar bg-info" role="progressbar" style="width: {partly}%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">{partly}%</div>
+  		<div class="progress-bar" role="progressbar" style="width: {pending}%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">{pending}%</div>
+  		</div>
+		
+		<p>Teljesült ígéretek: <b>{success}%</b>, részben teljesült: <b>{partly}%</b>, folyamatban: <b>{pending}%</b></p>
+		''',
+
+		"date_progress" : '''
+		<div class="progress" style="height: 30px">
+  		<div class="progress-bar" role="progressbar" style="width: {days_percentage}%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">{days_percentage} %</div>
+		</div>
+		<p>Eltelt idő: <b>{days_percentage}%</b>, még {remaining_months} hónap van hátra {end_date}-ig</p>
+		</div>
+		'''
+		,
+
 		"promise_list_news_info_icon" : '''
 		<div class="promise_list_news_icon"><span class="badge badge-light" style="width: 42px !important;"><img alt="{article_count} kapcsolódó hír" src="static/images/newspaper.png" style="width:18px; height:auto; margin-right: 5px;"><b>{article_count}</b></span></div>
 		''',

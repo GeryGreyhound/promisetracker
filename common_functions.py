@@ -44,6 +44,8 @@ def send_email(subject, body, extra_options = dict()):
 	server.sendmail(sent_from, to, mail.as_string())
 	server.close()
 
+def diff_month(d1, d2):
+	return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 def sql_injection_filter(string):
 

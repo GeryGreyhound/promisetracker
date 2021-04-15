@@ -9,6 +9,9 @@ import datetime
 import requests
 
 import kemocloud_page_builder_v2
+from common_functions import *
+
+
 
 class DatabaseConnection:
 
@@ -29,8 +32,11 @@ class Politician:
 	def __init__(self, id):
 		self.id = id
 		self.get_basic_data()
+		self.generate_html()
 		if self.existent:
 			self.promise_list = PromiseListType2(self.id)
+		self.html += self.promise_list.promise_list_html
+
 
 	def create_from_csv(self, csv_file):
 		pass
@@ -60,11 +66,23 @@ class Politician:
 			dbc.cursor.execute("SELECT * FROM elections WHERE id = (%s)", [self.last_elected])
 			self.end_date = dbc.cursor.fetchone()[1]
 
+			self.passed_months = diff_month(self.start_date,datetime.datetime.now())
+			self.remaining_months = -1*(diff_month(datetime.datetime.now(),self.end_date))-1
+			self.passed_days = (datetime.datetime.now() - self.start_date).days
+			self.total_days = (self.end_date - self.start_date).days
+
+			self.days_percentage = round((self.passed_days / self.total_days) * 100, 2)
+			self.date_progress = {"start_date" : self.start_date, 
+								  "end_date" : self.end_date,
+								  "passed_months" : self.passed_months, 
+								  "remaining_months" : self.remaining_months,
+								  "days_percentage" : self.days_percentage}
+
 		else:
 			self.existent = False
 
-	def create article_list(self):
-		pass
+	def generate_html(self):
+		self.html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["date_progress"].format(**self.date_progress)
 
 
 
@@ -75,6 +93,7 @@ class PromiseListType2:
 		self.promises = list()
 		self.promise_categories = list()
 		self.status_counters = {"promises" : 0, "none": 0, "success" : 0, "pending" : 0, "partly" : 0, "problem" : 0, "fail" : 0}
+		self.status_percentages = dict()
 		self.loop_counter_test = 0
 
 		dbc = DatabaseConnection()
@@ -152,11 +171,20 @@ class PromiseListType2:
 				self.status_counters["promises"] += 1
 				self.promise_categories[category_position_in_list]["promise_list"].append(promise)
 
+		needed_statuses = ["success", "partly", "pending"]
+
+		for ns in needed_statuses:
+			self.status_percentages[ns] = round((self.status_counters[ns] / self.status_counters["promises"]) * 100, 2)
 
 		self.generate_html()
 
 	def generate_html(self):
+		
+
 		self.promise_list_html = ""
+
+		status_counters_html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["status_counters"].format(**self.status_percentages)
+		self.promise_list_html += status_counters_html
 
 		for promise_category in self.promise_categories:
 			category_promises_html = ""
@@ -357,6 +385,13 @@ class Article:
 					self.source_name = "Facebook - " + title
 					self.article_title = None
 					self.errors.append("get_title_error")
+
+
+				# D) check if the article has an OG-image:
+				try:
+					self.image_url = soup.find("meta",  attrs={'property': 'og:image'})['content']
+				except:
+					self.image_url = None
 
 	def get_from_database(self):
 		pass

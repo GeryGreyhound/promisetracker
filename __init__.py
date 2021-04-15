@@ -25,6 +25,9 @@ session["version"] is controlled by a v=1 or v=2 URL argument. I know it's a lit
 
 If you got any question or suggestion, feel free to contact me on GitHub
 
+#RUSHIT2104 - in april of 2021 there is not much time to finish this as I planned so there are some parts where I needed to make compromises between nice code and working app. 
+# Maybe these will be cleaned somewhere in the future.
+
 '''
 
 os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
@@ -35,7 +38,7 @@ print("CW2: ", cw)
 
 # from promisetracker_v2 import *
 
-from common_functions import send_email, StopWatch, csv_to_dict
+from common_functions import send_email, StopWatch, csv_to_dict, diff_month
 import new_refactored_oop_functions as promisetracker_v2
 import kemocloud_page_builder_v2
 
@@ -94,8 +97,7 @@ def sql_injection_filter(string):
 		return string
 	return message
 
-def diff_month(d1, d2):
-	return (d1.year - d2.year) * 12 + d1.month - d2.month
+
 
 source_replaceable_url_parts = {"m.hvg.hu" : "hvg.hu"}
 
@@ -245,7 +247,7 @@ def main_page():
 def about_page():
 	page_properties = dict()
 	page_properties["og-title"] = "ÍgéretFigyelő"
-	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
+	page_properties["sidebar"] = {"title" : "Promisetracker goes international & open source!", "contents" : Markup('<a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker"><img style="width: 100%; height: auto;" src=https://repository-images.githubusercontent.com/346818400/37807a80-96a1-11eb-9e2c-afc485d1ad16></a>2021. áprilisában a cikkek után már az oldal forráskódja is közösségi szerkesztésűre vált! Ha értesz a Python programozáshoz és kedvet érzel új funkciók fejlesztéséhez, irány a <a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker">promisetracker repository</a> a GitHubon!')}
 
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
 
@@ -838,9 +840,9 @@ def igeretfigyelo_page(permalink):
 
 				# a politician_object tartalmazza a promise_listet az pedig a html-t, az 1:1-ben lehet a main_contentje a page_nek
 
-				v2_page.main_content = selected_politician.promise_list.promise_list_html
+				v2_page.main_content = selected_politician.html
 		
-		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"] 				
+		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"]			
 
 		
 		if permalink in kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages:
@@ -885,7 +887,6 @@ def igeretfigyelo_page(permalink):
 
 		
 		
-
 
 		benchmark_end_time = datetime.datetime.now()
 		print("V2 benchmark: assembling template: {}".format(datetime.datetime.now()))
@@ -1066,6 +1067,7 @@ def igeretfigyelo_page(permalink):
 
 	
 	else:
+		# V1 politician page innen - elvileg már kukázható ÉS átirányítható V1-re
 		print("V1 benchmark: getting news articles", datetime.datetime.now())
 		dbc.cursor.execute ("SELECT * FROM news_articles WHERE politician_id = '" + politician + "' ORDER BY article_date DESC LIMIT 10")
 		latest_news = dbc.cursor.fetchall()
@@ -1080,9 +1082,6 @@ def igeretfigyelo_page(permalink):
 			latest_news_formatted.append(article_details)
 
 
-
-
-		
 		# dbc.cursor.execute("SELECT * FROM promise_categories JOIN promises ON promises.category_id = promise_categories.category_id WHERE promises.politician_id = '" + politician + "' ORDER BY promises.id;")
 		
 
@@ -1340,9 +1339,16 @@ def validate_submission(submission_data):
 
 
 
+
+
+
 @app.route("/manage_submissions", methods = ["POST"])
 def save_changes():
 	#V2: sehol nincs még, Submission class-be való
+	# az egész compareable_values és db_col_names agyrém kukázandó, mert nem tűnik szépnek 
+	# legyen külön V2 itt is request argból!!
+	# egyébként is új DB columnok kellenek a marked-confirmed mizéria miatt
+
 	dbc = DatabaseOperations()
 	f = request.form
 	submissions = dict()
@@ -1622,11 +1628,12 @@ def activity_log_page():
 
 
 
-# nem promisetrackerhez kapcsolódó dolgok, külön fájlba kell tenni és GITIGNORE menjen rá
-# addig TILOS a git repót kinyitni
 
 
 
+
+
+# not related to the PromiseTracker project, I'm just too lazy to set up a separate server for this :)
 
 @app.route("/kemocloud-system-status")
 def kcss_page():
