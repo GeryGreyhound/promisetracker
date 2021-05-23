@@ -44,6 +44,21 @@ def send_email(subject, body, extra_options = dict()):
 	server.sendmail(sent_from, to, mail.as_string())
 	server.close()
 
+def decapitalize(text):
+	return_text = ""
+	if text.upper() == text:
+		for counter, char in enumerate(text):
+			if counter == 0:
+				pass
+			else:
+				char = char.lower()
+			return_text += char
+		return return_text
+	else:
+		return text
+
+
+
 def diff_month(d1, d2):
 	return (d1.year - d2.year) * 12 + d1.month - d2.month
 

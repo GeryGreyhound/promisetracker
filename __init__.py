@@ -308,7 +308,7 @@ def invite():
 		page_properties["errors"] = ["ehhez az e-mailcímhez nem tartozik meghívó"]
 		page_properties["disabled"] = True
 
-	page_properties["politicians"] = {"karacsonygergely" : "Karácsony Gergely", "shrekszilard" : "Shrek Szilárd (az oldal funkcióinak tesztelését segítő teszt politikus)", "csoziklaszlo" : "Csőzik László", "fulopzsolt": "Fülöp Zsolt"}
+	page_properties["politicians"] = {"karacsonygergely" : "Karácsony Gergely", "shrekszilard" : "Shrek Szilárd (az oldal funkcióinak tesztelését segítő teszt politikus)", "csoziklaszlo" : "Csőzik László", "fulopzsolt": "Fülöp Zsolt", "markizaypeter" : "Márki-Zay Péter"}
 	
 	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"} #LOL ez viszont faszság
 

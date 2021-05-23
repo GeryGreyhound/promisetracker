@@ -29,17 +29,111 @@ class DatabaseConnection:
 
 
 class Politician:
-	def __init__(self, id):
+	def __init__(self, id, get_data = True):
 		self.id = id
-		self.get_basic_data()
-		self.generate_html()
-		if self.existent:
+		self.existent = False
+		
+		try:
+			self.get_basic_data()
+		except:
+			pass
+
+		if self.existent and get_data == True:
 			self.promise_list = PromiseListType2(self.id)
-		self.html += self.promise_list.promise_list_html
+			self.generate_html()
+			self.html += self.promise_list.promise_list_html
 
 
-	def create_from_csv(self, csv_file):
-		pass
+	def create_from_csv(self, csv_file, promise_title_col = 2, article_url_col = 3, suggested_status_col = 4, recsv = False, db_write = True):
+		# article_url, suggested_status a CSV oszlopa, ha van sorszám akkor változik, szóval ne legyen hardcode-olva!
+		dbc = DatabaseConnection()
+
+		if recsv == True:
+			db_write = False
+		
+		with open (csv_file, "r") as data:
+			reader = csv.reader(data, delimiter = ";")
+
+			print("Promisetracker CSV importer robot v0.1 alpha")
+			politician_id = self.id
+			category_counter = 0
+			item_counter = 0
+			for line in reader:
+				re_line = None
+			
+				line[1] = line[1].replace("\t", "")
+				
+				
+				# for x in range(175, 0, -1):
+				#	if str(x) + ". " in line[1]:
+				#		line[1] = line[1].replace(str(x) + ". ", "")
+				
+				if "info" in line[0]:
+					print("Info:", line)
+					sql_command = None
+			
+				elif line[0] == "cat" or line[0] == "CAT":
+					category_counter += 1
+					sql_command = "INSERT INTO promise_categories VALUES (%s, %s, %s);"
+					sql_data = (politician_id, category_counter, decapitalize(line[1]))
+					re_line = "{};{}".format("cat", decapitalize(line[1]) + "\n")
+			
+				elif line[0] == "item" or line[0] == "ITEM":
+					item_counter += 1
+
+					promise_title = line[promise_title_col]
+					
+					if recsv == True:
+						promise_title = decapitalize(promise_title)
+						pt_input = input(promise_title + "\n")
+						if pt_input == "":
+							pass
+						else:
+							promise_title = pt_input
+
+					sql_command = "INSERT INTO promises VALUES (%s, %s, %s, %s, %s, %s);"
+					sql_data = (item_counter, politician_id, category_counter, promise_title, "", [])
+					if len(line) > 2:
+						article_url = line[article_url_col]
+						if article_url == "":
+							suggested_status = ""
+						else:
+						
+							article = Article(article_url)
+
+							suggested_status = line[suggested_status_col].lower()
+						
+							article.get_meta_data()
+							print(article.__dict__)
+							article.add_to_submissions(self.id, item_counter, "CSV importer robot", "localhost", datetime.datetime.now(), suggested_status)
+					else:
+						article_url = suggested_status = ""
+
+
+					re_line = "{};{};{};{};{}".format("item", item_counter, promise_title, article_url, suggested_status + "\n")
+					
+				try:
+					print("SQL COMMAND:", sql_command, sql_data)
+					if db_write == True:
+						dbc.cursor.execute(sql_command, sql_data)
+						print("DB WRITE: YES")
+					else:
+						print("DB WRITE: NO")
+				except Exception as e:
+					print("DB WRITE: FAILED:", e.args)
+				
+				if recsv == True and re_line:
+					# miért ne csinálnánk inkább egy új csv-t, amivel már nincs szopás
+					# aztán ha a névben benne van a recsv akkor azt máshogy kezeljük manuál inputok meg egyebek nélkül
+					# ez egy 2 sör után jött ötlet, úgyhogy lekódolni tlaán már nem szerencsés így, de próbáljuk meg :)
+	
+					# 1: ha recsv van, akkor nincs DB írás, csak CSV fájl írás
+					
+	
+					with open("recsv_" + self.id + ".csv", "a") as recsv_file:
+						recsv_file.write(re_line)
+
+		dbc.connection.close()
 
 	def get_basic_data(self):
 		dbc = DatabaseConnection()
@@ -381,8 +475,13 @@ class Article:
 				
 				if "facebook" in self.url:
 					title_string = soup.find("title").string
-					title, junk = title_string.split(" - ")
-					self.source_name = "Facebook - " + title
+					try:
+						title, junk = title_string.split(" - ")
+						self.source_name = "Facebook - " + title
+					except:
+						title = "Cím beolvasása nem sikerült"
+						self.source_name = "Facebook"
+					
 					self.article_title = None
 					self.errors.append("get_title_error")
 
