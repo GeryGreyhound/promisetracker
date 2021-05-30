@@ -1048,7 +1048,7 @@ def igeretfigyelo_page(permalink):
 					return render_template("/submission_processor.html", status_message = status_message, static_content = "static content", page_properties = {"sidebar" : {"title" : "teszt", "contents" : "teszt"}})
 
 				else:
-					status_message["error"] = response.status_code + " HTTP hibakód a " + url
+					status_message["error"] = str(response.status_code) + " HTTP hibakód a " + url
 					email_content = request.remote_addr + ',' + str(datetime.datetime.now()) + ',' + politician + ',' + promise_id + ',' + url + str(response.status_code)
 					send_email("Ígéretfigyelő: hibás cikkbeküldés: HTTP " + str(response.status_code), email_content)
 

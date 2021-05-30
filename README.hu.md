@@ -20,6 +20,11 @@ Mindenképp fel kell telepítened ezeket a fejlesztői eszközöket:
 2. Másold le az env sablont `cp .env.example .env` majd töltsd ki a hiányzó értékeket
 3. Hozz létre egy új adatbázist `createdb igeretfigyelo`
 4. Töltsd be a tábla szerkezetet `psql -f db/schema.sql -d igeretfigyelo`
+5. Generálj egy minta adatbázist `python db/seeds.py` (ki fog törölni minden eddigi adatot!)
+
+Alapértelmezett felhasználók (email / jelszó):
+* admin@example.com / LetMeIn
+* editor@example.com / LetMeIn
 
 ## Futtatás saját gépen
 

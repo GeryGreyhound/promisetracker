@@ -21,6 +21,11 @@ You need to install the following tools:
 2. Copy env template `cp .env.example .env` then fill in missing keys
 3. Create database with `createdb igeretfigyelo`
 4. Load database schema with `psql -f db/schema.sql -d igeretfigyelo`
+5. Generate a sample database with `python db/seeds.py` (it will erase all existing data)
+
+Default users are (email / password:
+* admin@example.com / LetMeIn
+* editor@example.com / LetMeIn
 
 ## Running locally
 
