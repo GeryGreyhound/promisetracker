@@ -29,7 +29,7 @@ class DatabaseConnection:
 
 
 class Politician:
-	def __init__(self, id, get_data = True):
+	def __init__(self, id, get_data = True, return_type = "html"):
 		self.id = id
 		self.existent = False
 		
@@ -38,10 +38,20 @@ class Politician:
 		except:
 			pass
 
+		# átállás React frontend + JSON API-ra, de meghagyva a régit
+		
 		if self.existent and get_data == True:
-			self.promise_list = PromiseListType2(self.id)
-			self.generate_html()
-			self.html += self.promise_list.promise_list_html
+
+			# html előállítása V2.5 módon:
+			if return_type == "html":
+				self.promise_list = PromiseListType2(self.id)
+				self.generate_html()
+				self.html += self.promise_list.promise_list_html
+			
+			# json előállítása - ez lesz a V3
+			elif return_type == "json":
+				self.promise_list = PromiseListType3(self.id)
+				self.promise_list.generate_json()
 
 
 	def create_from_csv(self, csv_file, promise_title_col = 2, article_url_col = 3, suggested_status_col = 4, recsv = False, db_write = True):
@@ -189,6 +199,8 @@ class PromiseListType2:
 		self.status_counters = {"promises" : 0, "none": 0, "success" : 0, "pending" : 0, "partly" : 0, "problem" : 0, "fail" : 0}
 		self.status_percentages = dict()
 		self.loop_counter_test = 0
+		self.data_json = dict()
+		self.data_json["promise_categories"] = list()
 
 		dbc = DatabaseConnection()
 
@@ -220,6 +232,8 @@ class PromiseListType2:
 			current_category["name"] = category[2]
 			current_category["promise_list"] = list()
 			self.promise_categories.append(current_category)
+			
+
 
 		for promise in promises:
 			current_promise = Promise(politician_id = self.politician_id, promise_id = promise[0])
@@ -274,7 +288,6 @@ class PromiseListType2:
 
 	def generate_html(self):
 		
-
 		self.promise_list_html = ""
 
 		status_counters_html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["status_counters"].format(**self.status_percentages)
@@ -333,6 +346,77 @@ class PromiseListType2:
 
 			category_html = kemocloud_page_builder_v2.PromisetrackerAddOn.custom_html["promise_list_category"].format(name = promise_category["name"], category_items = category_promises_html)
 			self.promise_list_html += category_html	
+
+
+
+# TECHNIKAI PRÓBA: mi lenne, ha egyetlen SQL query-vel megpróbálnánk egy JSON-t előállítani, és az egész frontendet Reactben összerakni a fenti szarakodás helyett?
+class PromiseListType3:
+
+	def __init__(self, politician_id):
+		self.politician_id = politician_id
+	
+	def generate_json(self):
+		dbc = DatabaseConnection()
+		
+		query_string = '''
+				SELECT promises.category_id, promise_categories.category_name, promises.id AS promise_id, promises.name as promise_name, promises.custom_options, promises.sub_items, news_articles.article_date, news_articles.url, news_articles.source_name, news_articles.article_title, news_articles.promise_status
+				FROM promises
+				JOIN promise_categories ON promises.category_id = promise_categories.category_id AND promises.politician_id = promise_categories.politician_id
+				LEFT JOIN news_articles ON news_articles.politician_id = promises.politician_id AND news_articles.promise_id = promises.id
+				WHERE promise_categories.politician_id = '{}'
+				ORDER BY promises.id ASC, news_articles.article_date DESC
+				'''.format(self.politician_id)
+
+		dbc.cursor.execute(query_string)
+		raw_data = dbc.cursor.fetchall()
+
+		data_dict = dict()
+		data_dict["promise_categories"] = list()
+
+		current_category_id = ""
+		current_promise_id = ""
+		# current_article_url?
+
+		for row in raw_data:
+			category_id = row[0]
+			category_name = row[1]
+			promise_id = row[2]
+			promise_name = row[3]
+			custom_options = row[4]
+			sub_items = row[5]
+			article_date = row[6]
+			article_url = row[7]
+			article_source_name = row[8]
+			article_title = row[9]
+			promise_status = row[10]
+
+			try:
+				article_date = article_date.strftime("%Y-%m-%d")
+			except:
+				article_date = None
+
+			if promise_id != current_promise_id:
+				if current_promise_id != "":
+					current_category["promises"].append(current_promise)
+				current_promise_id = promise_id
+				current_promise = {"id" : promise_id, "name" : promise_name, "articles" : list()}
+
+			if article_url:
+				current_promise["articles"].append({"date" : article_date, "url" : article_url, "title" : article_title, "source_name" : article_source_name})
+				if not "status" in current_promise:
+					current_promise["status"] = promise_status
+
+			if category_id != current_category_id:
+				if current_category_id != "":
+					data_dict["promise_categories"].append(current_category)
+				current_category_id = category_id
+				current_category = {"id" : category_id, "name" : category_name, "promises" : list()}
+
+
+		# self.json_data = json.dumps(data_dict)
+		self.json_data = data_dict
+
+
 
 
 

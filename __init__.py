@@ -1,4 +1,4 @@
-from flask import Flask, Markup, render_template, session, request, redirect
+from flask import Flask, Markup, render_template, session, request, redirect, jsonify
 from bs4 import BeautifulSoup
 from email.mime.text import MIMEText as text
 from email.mime.multipart import MIMEMultipart
@@ -804,7 +804,13 @@ def create_template(): #(page_permalink, hogy statik oldal kell vagy politikusos
 
 	return v2_template
 
+@app.route("/api")
+def api():
+	politician_id = request.args.get("politician_id")
 
+	politician = promisetracker_v2.Politician(politician_id, return_type = "json")
+
+	return jsonify(politician.promise_list.json_data)
 
 
 @app.route("/<permalink>", methods = ["POST", "GET"])
