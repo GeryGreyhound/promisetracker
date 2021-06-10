@@ -4,3 +4,5 @@ passlib==1.7.1
 beautifulsoup4==4.9.3
 psycopg2==2.8.6
 PyPDF2==1.26.0
+lxml==4.6.3
+python-dotenv==0.17.1

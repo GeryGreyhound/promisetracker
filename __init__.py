@@ -13,6 +13,7 @@ import requests
 import smtplib
 import socket
 import time
+from dotenv import load_dotenv
 
 cw = os.getcwd()
 print("CW1: ", cw)
@@ -20,21 +21,22 @@ print("CW1: ", cw)
 '''
 
 This file was originally created back in 2019 when I was lack of any OOP-knowledge so it contained all the back-end functions in a procedural way.
-Now it's being rewritten from the ground up while trying to maintain the working of the old version (you can see it in action after @app.route("/<permalink>") - 
-session["version"] is controlled by a v=1 or v=2 URL argument. I know it's a little bit messy, but I think I can "de-spaghettize" this whole thing :) 
+Now it's being rewritten from the ground up while trying to maintain the working of the old version (you can see it in action after @app.route("/<permalink>") -
+session["version"] is controlled by a v=1 or v=2 URL argument. I know it's a little bit messy, but I think I can "de-spaghettize" this whole thing :)
 
 If you got any question or suggestion, feel free to contact me on GitHub
 
-#RUSHIT2104 - in april of 2021 there is not much time to finish this as I planned so there are some parts where I needed to make compromises between nice code and working app. 
+#RUSHIT2104 - in april of 2021 there is not much time to finish this as I planned so there are some parts where I needed to make compromises between nice code and working app.
 # Maybe these will be cleaned somewhere in the future.
 
 '''
 
-os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
-sys.path.insert(0, os.getcwd())
-
-cw = os.getcwd()
-print("CW2: ", cw)
+## TODO: why was it here? we shouldn't hard code any path to the project
+# os.chdir("/var/www/igeretfigyelo/igeretfigyelo")
+# sys.path.insert(0, os.getcwd())
+#
+# cw = os.getcwd()
+# print("CW2: ", cw)
 
 # from promisetracker_v2 import *
 
@@ -55,12 +57,12 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True # ha nincs template, ez se kell.
 class DatabaseOperations: # V2: DB-műveletek valószínűleg nem lesznek itt a Route-ok között, de azért még maradjon
 
 	def __init__(self):
-		config_file = "database.conf"
-
-		with open(config_file) as config:
-			db_config = config.read()
-			
-		self.connection = psycopg2.connect(db_config)
+		self.connection = psycopg2.connect(
+			dbname=os.getenv('DB_DATABASE'),
+			user=os.getenv('DB_USER'),
+			password=os.getenv('DB_PASSWORD'),
+			host=os.getenv('DB_HOST'),
+			port=os.getenv('DB_PORT'))
 		self.connection.autocommit = True
 		self.cursor = self.connection.cursor()
 
@@ -129,7 +131,7 @@ def fetch_article_data(article_url, soup):
 	try:
 		published_date = sql_injection_filter(soup.find("meta",  attrs={'property': 'article:published_time'})['content'])
 	except:
-	
+
 		try:
 			url_parts = list(article_url.split("/"))
 			for counter, part in enumerate(url_parts):
@@ -137,13 +139,13 @@ def fetch_article_data(article_url, soup):
 					try:
 						year, month, day = int(url_parts[counter]), int(url_parts[counter+1]), int(url_parts[counter+2])
 						print("year, month, day",year, month, day)
-						
+
 						published_date = datetime.datetime(year, month, day).strftime("%Y-%m-%d")
 
 					except:
 						pass
-						
-		
+
+
 		except:
 			published_date = '1982-01-18'
 
@@ -194,12 +196,12 @@ def before_request_func():
 		session["version"] = request.args.get("v")
 		if not session["version"]:
 			session["version"] = "1"
-	
+
 	if not "language" in session or "lang" in request.args:
 		session["language"] = request.args.get("lang")
 		if not session["language"]:
 			session["language"] = "hu"
-		
+
 
 	#V2 ez csinosításra szorul - jó lenne a common_functionsba tenni valamit, mert bármilyen projektben is kellhet a júzer IP-címe bármire.
 	headers_list = request.headers.getlist("X-Forwarded-For")
@@ -224,14 +226,14 @@ def before_request_func():
 
 	if print_req:
 		print(user_ip, request.url)
-		with open ("/var/www/igeretfigyelo/igeretfigyelo/access_log.csv", "a") as logfile:
+		with open ("access_log.csv", "a") as logfile:
 			logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "," + str(user_ip) + "," + str(request.url) + "," + str(request.referrer) + "\n")
 
 
 
 
 #V1 static oldalak - kukázandók a v1 kukázásakor ---->
-	
+
 @app.route("/", methods = ["POST", "GET"])
 def main_page():
 	if "lang" in request.args:
@@ -247,7 +249,7 @@ def main_page():
 def about_page():
 	page_properties = dict()
 	page_properties["og-title"] = "ÍgéretFigyelő"
-	page_properties["sidebar"] = {"title" : "Promisetracker goes international & open source!", "contents" : Markup('<a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker"><img style="width: 100%; height: auto;" src=https://repository-images.githubusercontent.com/346818400/37807a80-96a1-11eb-9e2c-afc485d1ad16></a>2021. áprilisában a cikkek után már az oldal forráskódja is közösségi szerkesztésűre vált! Ha értesz a Python programozáshoz és kedvet érzel új funkciók fejlesztéséhez, irány a <a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker">promisetracker repository</a> a GitHubon!')}
+	page_properties["sidebar"] = {"title" : "Promisetracker goes international & open source!", "content" : Markup('<a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker"><img style="width: 100%; height: auto;" src=https://repository-images.githubusercontent.com/346818400/37807a80-96a1-11eb-9e2c-afc485d1ad16></a>2021. áprilisában a cikkek után már az oldal forráskódja is közösségi szerkesztésűre vált! Ha értesz a Python programozáshoz és kedvet érzel új funkciók fejlesztéséhez, irány a <a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker">promisetracker repository</a> a GitHubon!')}
 
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
 
@@ -274,7 +276,7 @@ def contact_page():
 
 		return render_template("contact.html", page_properties = page_properties, static_content = "static_content", success = True)
 
-	else:	
+	else:
 		return render_template("contact.html", page_properties = page_properties, static_content = "static_content")
 
 
@@ -291,9 +293,9 @@ def invite():
 	dbc = DatabaseOperations()
 	page_properties = dict()
 	email = request.args.get("email")
-	
+
 	dbc.cursor.execute("SELECT * FROM invitations WHERE email = (%s)", [email])
-	
+
 	invitation_data = dbc.cursor.fetchone()
 	page_properties["errors"] = None
 
@@ -309,7 +311,7 @@ def invite():
 		page_properties["disabled"] = True
 
 	page_properties["politicians"] = {"karacsonygergely" : "Karácsony Gergely", "shrekszilard" : "Shrek Szilárd (az oldal funkcióinak tesztelését segítő teszt politikus)", "csoziklaszlo" : "Csőzik László", "fulopzsolt": "Fülöp Zsolt", "markizaypeter" : "Márki-Zay Péter"}
-	
+
 	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"} #LOL ez viszont faszság
 
 	return render_template("invite.html", page_properties = page_properties, static_content = "static_content")
@@ -322,13 +324,14 @@ def gipsz_jakab():
 	dbc.cursor.execute("SELECT * FROM users WHERE email = 'gipsz.jakab@gmail.com'")
 
 	gj_data = dbc.cursor.fetchone()
-	gj_id = gj_data[0]
+	if gj_data:
+		gj_id = gj_data[0]
 
-	dbc.cursor.execute("DELETE FROM users WHERE email = 'gipsz.jakab@gmail.com'")
-	dbc.cursor.execute("DELETE FROM user_permissions WHERE user_id = (%s)", [gj_id])
+		dbc.cursor.execute("DELETE FROM users WHERE email = 'gipsz.jakab@gmail.com'")
+		dbc.cursor.execute("DELETE FROM user_permissions WHERE user_id = (%s)", [gj_id])
 
 	return("ok")
-	
+
 
 @app.route("/register", methods = ["POST"])
 def register():
@@ -373,7 +376,7 @@ def register():
 
 	page_properties["sidebar"] = {"title" : "Egyedi sidebar", "content" : "teszt"}
 
-	
+
 	return render_template("invite.html", page_properties = page_properties, static_content = "static_content")
 
 @app.route("/news")
@@ -404,9 +407,9 @@ def news_page():
 
 	status_message = ""
 
-	page_properties = {"name" : selected_politician[1], 
-					   "location" : selected_politician[2], 
-					   "title" : selected_politician[3], 
+	page_properties = {"name" : selected_politician[1],
+					   "location" : selected_politician[2],
+					   "title" : selected_politician[3],
 					   "sidebar" : {"title" : selected_politician[1] + " névjegye", "content": {"newsfeed" : latest_news_formatted}},
 					   "status_message" : status_message}
 
@@ -421,7 +424,7 @@ def get_users_politicians(user_id):
 	selected_user = dbc.cursor.fetchone()
 
 	if selected_user[3] == "full":
-		dbc.cursor.execute("SELECT id FROM politicians") 
+		dbc.cursor.execute("SELECT id FROM politicians")
 		# to-do: itt legyen majd lokáció meg titulus is, mert az adminmenüben áttekinthetetlen lesz idővel hogy ki kicsoda
 		# to-do: politicians táblában legyen public kapcsoló, hogy az Ígéretfigyelő kezdőlapján (/about) megjelenjen_e
 
@@ -513,8 +516,8 @@ def admin_page():
 		pols_query_list += ")"
 
 		sub_query = '''
-			select * from submissions 
-			join politicians on politicians.id = submissions.politician_id 
+			select * from submissions
+			join politicians on politicians.id = submissions.politician_id
 			left join promises on promises.id = submissions.promise_id and promises.politician_id = submissions.politician_id
 			left join users on submissions.confirmed_by = users.id
 			where submissions.politician_id in ---list---
@@ -528,13 +531,13 @@ def admin_page():
 
 		submissions = list()
 		submissions_test = ""
-	
+
 		for sub in submissions_list:
 			current = dict()
 			current["date"] = sub[0].strftime("%Y-%m-%d")
 			if current["date"] == "1982-01-18":
 				current["date"] = ""
-			
+
 			current["url"] = sub[2]
 			current["source_name"] = sub[3]
 			current["title"] = sub[4]
@@ -543,7 +546,7 @@ def admin_page():
 			current["submission_date"] = (sub[7]+datetime.timedelta(hours = 2)).strftime("%Y-%m-%d %H:%M:%S")
 			current["submitted_by"] = sub[8]
 			current["submission_id"] = str(sub[9]).zfill(5)
-			
+
 			confirm_status = sub[10]
 			try:
 				current["confirm_level"], current["confirm_value"] = confirm_status.split("_")
@@ -552,26 +555,26 @@ def admin_page():
 
 			current["confirmed_by"] = sub[11]
 			current["suggested_status"] = sub[12]
-	
+
 			if sub[13]:
 				current["validation_errors"] = sub[13]
 
 			current["politician_name"] = sub[15]
-			
+
 			current["custom_options"] = str(sub[25])
 			current["confirmer_user_permissions"] = sub[30]
 			current["confirmed_by_display_name"] = sub[31]
 
 			if not current["submitted_by"]:
 				current["submitted_by"] = "vendég (IP cím: " + sub[1] + ")"
-			
+
 			dbc.cursor.execute("SELECT promise_status FROM news_articles WHERE politician_id = (%s) AND promise_id = (%s) LIMIT 1", [current["politician_id"], current["promise_id"]])
 			ps = dbc.cursor.fetchone()
 			if ps:
 				current["promise_status_id"] = ps[0]
 			else:
 				current["promise_status_id"] = "none"
-				
+
 			current["promise_status_title"] = promise_statuses[current["promise_status_id"]]
 
 
@@ -658,7 +661,7 @@ def admin_page():
 		<p><a href=/activity_log>tevékenységnapló</a></p>
 		'''.format(session["user_name"], user_permission, pol_list, str(len(submissions)))
 
-		page_properties["sidebar"]["contents"] = Markup(admin_menu_html)
+		page_properties["sidebar"]["content"] = Markup(admin_menu_html)
 
 		return render_template("admin.html", static_content = "static content", submissions_list = submissions, page_properties = page_properties, error = error, admin_mode = True, debug_mode = MAIN_SETTINGS["DEBUG_OPTIONS"])
 
@@ -685,12 +688,12 @@ def ifadmin_login():
 	if "logged_in" not in session:
 
 		if request.method == "POST":
-		
+
 			user_email = sql_injection_filter(request.form["email"])
 			user_password = sql_injection_filter(request.form["password"])
 
 			dbc.cursor.execute("SELECT * FROM users WHERE email = (%s)", [user_email])
-			
+
 			selected_user = dbc.cursor.fetchone()
 
 			if not selected_user:
@@ -767,12 +770,12 @@ function show_details(id) {{
 class DatabaseConnection:
 
 	def __init__(self):
-		config_file = "database.conf"
-
-		with open(config_file) as config:
-			db_config = config.read()
-			
-		self.connection = psycopg2.connect(db_config)
+		self.connection = psycopg2.connect(
+			dbname=os.getenv('DB_DATABASE'),
+			user=os.getenv('DB_USER'),
+			password=os.getenv('DB_PASSWORD'),
+			host=os.getenv('DB_HOST'),
+			port=os.getenv('DB_PORT'))
 		self.connection.autocommit = True
 		self.cursor = self.connection.cursor()
 
@@ -847,10 +850,10 @@ def igeretfigyelo_page(permalink):
 				# a politician_object tartalmazza a promise_listet az pedig a html-t, az 1:1-ben lehet a main_contentje a page_nek
 
 				v2_page.main_content = selected_politician.html
-		
-		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"]			
 
-		
+		v2_page.navbar_items = SITE_CONFIG["NAVBAR_ITEMS"]
+
+
 		if permalink in kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages:
 
 			# RUSHIT 2104 | ideiglenesen itt hozzuk létre a static page-ekhez szükséges plusz elemeket, de erre majd ki kell találni valami elegánsabbat a pagebuilderben
@@ -873,11 +876,11 @@ def igeretfigyelo_page(permalink):
 					page_custom_variables["politician_box_politician_list"] += politician_box_table_row.format(**row_data)
 
 				page_custom_variables["politician_box_politician_list"] += "<tr><td colspan=5>5 col széles alsó sor - itt lesz majd az új politikus regisztrációja</td></tr>"
-				
-				page_custom_variables["politician_box_add_new"] = "új", 
+
+				page_custom_variables["politician_box_add_new"] = "új",
 				page_custom_variables["more_intro_text"] = "blabla"
 
-			
+
 			elif permalink == "contact":
 				pass
 
@@ -886,22 +889,22 @@ def igeretfigyelo_page(permalink):
 
 			elif permalink == "blog":
 				pass
-				
+
 
 			v2_page.main_content = kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages[permalink].format(**page_custom_variables)
 			print(kemocloud_page_builder_v2.PromisetrackerAddOn.static_pages[permalink])
 
-		
-		
+
+
 
 		benchmark_end_time = datetime.datetime.now()
 		print("V2 benchmark: assembling template: {}".format(datetime.datetime.now()))
-		
+
 
 		v2_page.assemble_html_parts()
 		print("V2 benchmark: returning Markup: {}".format(datetime.datetime.now()))
 		print("V2 benchmark: total time", datetime.datetime.now() - benchmark_start_time)
-		
+
 
 		if request.method == "POST":
 			v2_submission = promisetracker_v2.Submission()
@@ -926,7 +929,7 @@ def igeretfigyelo_page(permalink):
 
 
 		return Markup(v2_page.final_html)
-	
+
 
 
 
@@ -984,12 +987,12 @@ def igeretfigyelo_page(permalink):
 			for value in f.getlist(key):
 				print(key, value)
 				print()
-				
+
 				try:
 					v1,v2,permalink,promise_id = key.split("_")
 				except:
 					pass
-				
+
 				url = value
 
 				try:
@@ -999,18 +1002,18 @@ def igeretfigyelo_page(permalink):
 					response.status_code = None
 
 
-				
+
 				print ("response.status_code", response.status_code)
-				
+
 				if not response.status_code:
 					status_message["error"] = "A megadott URL (" + url + ") nem található, kérjük, ellenőrizd!"
 					email_content = request.remote_addr + ',' + str(datetime.datetime.now()) + ',' + politician + ',' + promise_id + ',' + url
 					# send_email("ÍgéretFigyelő: hibás cikkbeküldés", email_content)
-	
+
 				elif response.status_code == 200:
 
 					soup = BeautifulSoup(response.text, "html.parser")
-					
+
 					article_title, published_date, source_name = fetch_article_data(url, soup)
 
 					if "logged_in" in session:
@@ -1051,7 +1054,7 @@ def igeretfigyelo_page(permalink):
 					return render_template("/submission_processor.html", status_message = status_message, static_content = "static content", page_properties = {"sidebar" : {"title" : "teszt", "contents" : "teszt"}})
 
 				else:
-					status_message["error"] = response.status_code + " HTTP hibakód a " + url
+					status_message["error"] = str(response.status_code) + " HTTP hibakód a " + url
 					email_content = request.remote_addr + ',' + str(datetime.datetime.now()) + ',' + politician + ',' + promise_id + ',' + url + str(response.status_code)
 					send_email("Ígéretfigyelő: hibás cikkbeküldés: HTTP " + str(response.status_code), email_content)
 
@@ -1071,7 +1074,7 @@ def igeretfigyelo_page(permalink):
 	except:
 		return "error.html helye, hiba: nincs az adatbázisban ilyen"
 
-	
+
 	else:
 		# V1 politician page innen - elvileg már kukázható ÉS átirányítható V1-re
 		print("V1 benchmark: getting news articles", datetime.datetime.now())
@@ -1089,7 +1092,7 @@ def igeretfigyelo_page(permalink):
 
 
 		# dbc.cursor.execute("SELECT * FROM promise_categories JOIN promises ON promises.category_id = promise_categories.category_id WHERE promises.politician_id = '" + politician + "' ORDER BY promises.id;")
-		
+
 
 
 
@@ -1105,7 +1108,7 @@ def igeretfigyelo_page(permalink):
 		partly_counter = 0
 
 		promises_list = list()
-		
+
 		for category in promise_categories:
 			category_details = dict()
 			category_details["title"] = category[2]
@@ -1128,7 +1131,7 @@ def igeretfigyelo_page(permalink):
 				promise_subitems = dbc.cursor.fetchall()
 
 				promise_articles_list = list()
-				
+
 				if len(promise_articles) > 0:
 
 					promise_details["status"] = promise_articles[0][6]
@@ -1139,13 +1142,13 @@ def igeretfigyelo_page(permalink):
 						article_details["source"] = article[2]
 						article_details["title"] = article[3]
 						article_details["status"] = article[6]
-	
+
 						promise_articles_list.append(article_details)
 
 				else:
 					promise_details["status"] = "none"
-	
-				
+
+
 				promise_details["articles"] = promise_articles_list
 				promise_details["id"] = promise_id
 
@@ -1159,10 +1162,10 @@ def igeretfigyelo_page(permalink):
 						subitem_details["id"] = subitem[2]
 						subitem_details["title"] = subitem[3]
 						subitems_list.append(subitem_details)
-	
+
 				promise_details["subitems"] = subitems_list
 
-				
+
 
 				if promise_details["status"] == "success":
 					success_counter += 1
@@ -1195,11 +1198,11 @@ def igeretfigyelo_page(permalink):
 		pending_percentage = (pending_counter / promise_counter) * 100
 		partly_percentage = (partly_counter / promise_counter) * 100
 
-		page_properties = {"name" : selected_politician[1], 
-					   "location" : selected_politician[2], 
-					   "title" : selected_politician[3], 
-					   "start_date" : start_date.strftime("%Y. %B. %-d."), 
-					   "program_name" : selected_politician[5], 
+		page_properties = {"name" : selected_politician[1],
+					   "location" : selected_politician[2],
+					   "title" : selected_politician[3],
+					   "start_date" : start_date.strftime("%Y. %B. %-d."),
+					   "program_name" : selected_politician[5],
 					   "notes" : selected_politician[4],
 					   "days_percentage" : "%.1f" % days_percentage,
 					   "promise_counter" : promise_counter,
@@ -1235,19 +1238,19 @@ def submission_processor():
 
 	permitted_users = dict()
 	email_list = list()
-	
+
 	dbc.cursor.execute("SELECT user_id FROM user_permissions WHERE politician_id = (%s)", [politician])
 	moderators = dbc.cursor.fetchall()
-	
+
 	for m in moderators:
 		permitted_users[m[0]] = dict()
-	
+
 	dbc.cursor.execute("SELECT id FROM users WHERE permissions = 'full'")
 	admins = dbc.cursor.fetchall()
-	
+
 	for a in admins:
 		permitted_users[a[0]]= dict()
-	
+
 	for user_id in permitted_users:
 		dbc.cursor.execute("SELECT email FROM users WHERE id = (%s)", [user_id])
 		permitted_users[user_id]["email"] = dbc.cursor.fetchone()[0]
@@ -1257,7 +1260,7 @@ def submission_processor():
 
 	if len(email_list) > 0:
 		extra_options["email_list"] = email_list
-	
+
 
 	dbc.cursor.execute("SELECT * FROM submissions WHERE id = (%s)", [submission_id])
 	current_submission = dbc.cursor.fetchone()
@@ -1273,7 +1276,7 @@ def submission_processor():
 
 	if not submission_parameters["submitted_by"]:
 		submission_parameters["submitted_by"] = "ismeretlen"
-	
+
 	if submission_parameters["promise_id"] == 0:
 		submission_parameters["promise_id"] = "nincs megadva"
 
@@ -1283,7 +1286,7 @@ def submission_processor():
 	<p><b>Cikk:</b> {} - <a href={}>{}</a></p>
 	<p><a href="http://igeretfigyelo.hu/ifadmin">cikkbeküldések kezelése</a></p>
 	'''.format(str(submission_parameters['submitted_by']), submission_parameters['submitter_ip'], (datetime.datetime.now()+datetime.timedelta(hours = 2)).strftime("%Y-%m-%d %H:%M:%S"), submission_parameters['politician_id'], submission_parameters['promise_id'], submission_parameters['article_title'], submission_parameters['url'], submission_parameters['url'])
-	
+
 	mail_body["text"] = submission_parameters['submitter_ip'] + ',' + str(datetime.datetime.now()) + ',' + submission_parameters['politician_id'] + ',' + str(submission_parameters['promise_id']) + ',' + submission_parameters['url'] +',' + submission_parameters['article_title']
 
 	send_email("Ígéretfigyelő: új cikkbeküldés", mail_body, extra_options)
@@ -1291,7 +1294,7 @@ def submission_processor():
 	return redirect("/" + politician + "?submission_success=" + str(submission_parameters['id']))
 
 
-	# ----> egészen idáig. 
+	# ----> egészen idáig.
 
 
 def validate_submission(submission_data):
@@ -1351,7 +1354,7 @@ def validate_submission(submission_data):
 @app.route("/manage_submissions", methods = ["POST"])
 def save_changes():
 	#V2: sehol nincs még, Submission class-be való
-	# az egész compareable_values és db_col_names agyrém kukázandó, mert nem tűnik szépnek 
+	# az egész compareable_values és db_col_names agyrém kukázandó, mert nem tűnik szépnek
 	# legyen külön V2 itt is request argból!!
 	# egyébként is új DB columnok kellenek a marked-confirmed mizéria miatt
 
@@ -1444,9 +1447,9 @@ def save_changes():
 				# itt lesz az, hogy ha be van pipálva a véglegesítés, akkor elágazunk: mark_save illetve confirm_save
 				# if kibaszott pipa oda van téve: save_type = "confirm" else: "mark"
 				# itt most próbaképp legyen egy False:
-	
-				
-	
+
+
+
 				# innentől az éles elágazás:
 
 				# de előtte szétspliteljük hogy mi a fasz. Ha None vagy null vagy lófasz akkor legyen lófasz és írjuk felül az újjal.
@@ -1460,24 +1463,24 @@ def save_changes():
 				# itt ez mindenképp kell az oszlopozáson belül is, hiszen az error_list is egy oszlop, amit módosítani akarunk
 
 				validation_errors = validate_submission(submissions[sub_count])
-				
+
 				if bool(validation_errors) == False:
 					error_list = list()
 					for error in validation_errors:
 						error_list.append(error)
-	
+
 					error_list_string = str(error_list).replace("[", "{").replace("]", "}").replace('"', "'")
 				else:
 					error_list_string = "{}"
-				
+
 				dbc.cursor.execute("UPDATE submissions SET not_valid_items = %s WHERE id = %s", [str(error_list_string), str(sub_id)])
 
-				
-	
+
+
 				if "save" in modif or "discard" in modif or modif == "":
 					if not finalize_check:
 						modif = "marked_" + modif
-					
+
 					else:
 						print("finelize check")
 						if "save" in modif:
@@ -1486,7 +1489,7 @@ def save_changes():
 								edit_feedback["saved"] += str(sub_id) + "_"
 							else:
 								modif = "marked_save"
-						
+
 						elif "discard" in modif:
 							modif = "confirmed_discard"
 							edit_feedback["deleted"] += str(sub_id) + "_"
@@ -1500,14 +1503,14 @@ def save_changes():
 
 				# bármi is a döntés, be kell juttatni a tábla "confirmed_by" oszlopába a júzert
 
-				# a for sub in submissions_list: - 	current = dict() dictbe bele kell majd tenni, 
+				# a for sub in submissions_list: - 	current = dict() dictbe bele kell majd tenni,
 				# és ott dől el, hogy az adott júzernek megjelenjen-e a sub kártyája
 				# vagyis benne legyen-e a dictben
 
 				# és akkor az admin.html-ben ezzel egyáltalán nem kell már szarozni
 
 			if orig != modif or db_col_name == "confirm_status":
-				
+
 				dbc.cursor.execute("UPDATE submissions SET %s = %s WHERE id = %s", [AsIs(db_col_name), modif, sub_id])
 
 				if db_col_name == "confirm_status":
@@ -1520,11 +1523,11 @@ def save_changes():
 
 
 
-				# ----> ez kezdődik itt		
-						
+				# ----> ez kezdődik itt
+
 			# DEBUG: return Markup(str(submissions[sub_count]) + "<hr>" + str(validation_errors) + "<hr>Validation errors: " + str(bool(validation_errors))
 			# confirmed csak akkor lehet, ha validált
-			
+
 
 		validation_errors = validate_submission(submissions[sub_count])
 
@@ -1545,7 +1548,7 @@ def save_changes():
 					# illetve az ígéretről levesszük a "draft" flag-et
 				if "new-promise" in submissions[sub_count]:
 					dbc.cursor.execute("UPDATE promises SET custom_options = %s WHERE id = %s and politician_id = %s", [None, submissions[sub_count]["promise"], submissions[sub_count]["politician-id"]])
-						
+
 				print("new_submission_details: ", str(new_submission_details))
 				news_insert_query_parameters = [str(new_submission_details["date"]), new_submission_details["url"], new_submission_details["source-name"], new_submission_details["title"], new_submission_details["politician-id"], new_submission_details["promise"], new_submission_details["new-promise-status"]]
 				print("news_insert_query_parameters: ", news_insert_query_parameters)
@@ -1574,11 +1577,11 @@ def save_changes():
 
 	'''
 	for submission_counter, msp in submissions.items(): # msp = modified_submission_parameters, ez jön a formból
-		
+
 
 		print("             ", submission_counter, original_submission)
 
-		
+
 
 
 	'''
@@ -1597,13 +1600,13 @@ def save_changes():
 
 			# a mentés és a véglegesítés gombok között között egy url arg a különbség, ezt itt bekérjük, és annak megfelelően dolgozunk
 
-			# odafigyelni: ha véglegesítést nyom a júzer, akkor lehet, hogy nincsenek változások, mert előtte mentett. A véglegesítést az "if changes" előtt, DE csak 
+			# odafigyelni: ha véglegesítést nyom a júzer, akkor lehet, hogy nincsenek változások, mert előtte mentett. A véglegesítést az "if changes" előtt, DE csak
 			# ha "action" van az F-ben
 
 			# végül pedig ha adminok vagyunk, a változott sub bekerül a news_article táblába, a submissionből törlődik(?)
-		
-			# if session["user_type"] == "full":	
-	
+
+			# if session["user_type"] == "full":
+
 	return redirect("/ifadmin?s={}&d={}&n={}".format(edit_feedback["saved"][:-1], edit_feedback["deleted"][:-1], edit_feedback["error"][:-1]))
 
 
@@ -1662,7 +1665,7 @@ def kcss_page():
 			dbc.cursor.execute("INSERT INTO kemocloud_system_status VALUES (%s, %s, %s, %s)", [dt, base, machine, ip])
 
 		return "ok"
-	
+
 	else:
 
 		if not "machine" in request.args:
@@ -1680,11 +1683,11 @@ def kcss_page():
 		for m in machines:
 			dbc.cursor.execute("SELECT * FROM kemocloud_system_status WHERE machine=(%s) ORDER BY dt DESC limit 1", [m])
 			last_report = dbc.cursor.fetchone()
-			
+
 			try:
 				last_online = last_report[0]
 				delta = datetime.datetime.utcnow() - last_online
-				
+
 				if delta.seconds < 70:
 					delta = ""
 					div_class = "badge badge-success"
@@ -1698,7 +1701,7 @@ def kcss_page():
 			except:
 				delta = "X"
 				div_class = "badge badge-danger"
-			
+
 			link_string = '<span class="{}" style="margin-left: 5px; margin-right: 5px;"><a style="color: #ffffff !important;" href="/kemocloud-system-status?machine={}">{} {}</a></span>'.format(div_class, m, m, delta)
 			page_html += link_string
 
@@ -1723,5 +1726,9 @@ def kcss_page():
 
 
 if __name__ == "__main__":
-	app.config['SERVER_NAME'] = "igeretfigyelo.hu" 
+	load_dotenv()
+
+	if not os.getenv('ENV') == 'development':
+		app.config['SERVER_NAME'] = "igeretfigyelo.hu"
+	app.secret_key = os.getenv('SECRET_KEY')
 	app.run(host='127.0.0.1', port=8080)
