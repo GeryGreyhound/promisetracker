@@ -6,3 +6,4 @@ psycopg2==2.8.6
 PyPDF2==1.26.0
 lxml==4.6.3
 python-dotenv==0.17.1
+bcrypt==3.2.0

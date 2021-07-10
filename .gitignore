@@ -8,3 +8,5 @@ mod_cloudflare/
 temp/
 __pycache__/
 .env
+.idea/
+venv/
