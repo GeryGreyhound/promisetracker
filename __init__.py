@@ -14,6 +14,7 @@ import smtplib
 import socket
 import time
 from dotenv import load_dotenv
+import bcrypt
 
 cw = os.getcwd()
 print("CW1: ", cw)
@@ -368,6 +369,7 @@ def register():
 		last_user = dbc.cursor.fetchone()
 		last_user_id = last_user[0]
 		new_user_id = last_user_id + 1
+		hashed_password = bcrypt.hashpw(password_1.encode('utf-8'), bcrypt.gensalt())
 
 		dbc.cursor.execute("INSERT INTO users VALUES (%s, %s, %s, %s, %s)", [new_user_id, email, password_1, "limited", display_name])
 		dbc.cursor.execute("INSERT INTO user_permissions VALUES (%s, %s)", [new_user_id, selected_politician])
@@ -699,7 +701,7 @@ def ifadmin_login():
 			if not selected_user:
 				return "error.html helye, hiba: user_not_found"
 
-			elif user_password != selected_user[2]:
+			elif not bcrypt.checkpw(user_password.encode('utf-8'), selected_user[2].encode('utf-8')):
 				return "error.html helye, hiba: incorrect_password"
 
 			else:
