@@ -1,4 +1,4 @@
-from flask import Flask, Markup, render_template, session, request, redirect, jsonify
+from flask import Flask, Markup, render_template, session, request, redirect, jsonify, Response
 from bs4 import BeautifulSoup
 from email.mime.text import MIMEText as text
 from email.mime.multipart import MIMEMultipart
@@ -181,10 +181,10 @@ def fetch_article_data(article_url, soup):
 		return article_title, "1982-01-18", source_name
 
 
+robots = ""
 
-
-
-
+with open('robots.txt') as f:
+    robots = f.read()
 
 
 
@@ -252,6 +252,10 @@ def about_page():
 	page_properties["sidebar"] = {"title" : "Promisetracker goes international & open source!", "content" : Markup('<a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker"><img style="width: 100%; height: auto;" src=https://repository-images.githubusercontent.com/346818400/37807a80-96a1-11eb-9e2c-afc485d1ad16></a>2021. áprilisában a cikkek után már az oldal forráskódja is közösségi szerkesztésűre vált! Ha értesz a Python programozáshoz és kedvet érzel új funkciók fejlesztéséhez, irány a <a href="/link?src=mainpage_banner&url=https://github.com/GeryGreyhound/promisetracker">promisetracker repository</a> a GitHubon!')}
 
 	return render_template("igeretfigyelo_about.html", page_properties = page_properties, static_content = "static_content")
+
+@app.route("/robots.txt")
+def robots_page():
+	return Response(robots, mimetype='text/plain')
 
 
 @app.route("/contact_v1", methods = ["POST", "GET"])
